@@ -46,6 +46,8 @@ export class AuthService implements IAuthService {
 
     const newUser = this.userRepository.create({
       username: data.username,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
       role: data.role,
       password: hashedPassword,

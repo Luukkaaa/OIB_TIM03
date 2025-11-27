@@ -12,6 +12,8 @@ type RegisterFormProps = {
 export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
   const [formData, setFormData] = useState<RegistrationUserDTO>({
     username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     role: UserRole.SELLER,
@@ -92,6 +94,40 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
         />
       </div>
 
+
+      <div>
+        <label htmlFor="firstName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+          Name
+        </label>
+        <input
+          type="text"
+          id="firstName"
+          name="firstName"
+          value={formData.firstName}
+          onChange={handleChange}
+          placeholder="Choose a name"
+          required
+          disabled={isLoading}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="lastName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+          Last Name
+        </label>
+        <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          value={formData.lastName}
+          onChange={handleChange}
+          placeholder="Choose a last name"
+          required
+          disabled={isLoading}
+        />
+      </div>
+
+
       <div>
         <label htmlFor="email" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
           Email
@@ -122,6 +158,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
         >
           <option value={UserRole.SELLER}>Seller</option>
           <option value={UserRole.ADMIN}>Admin</option>
+          <option value={UserRole.SALES_MANAGER}>Sales Manager</option>
         </select>
       </div>
 
