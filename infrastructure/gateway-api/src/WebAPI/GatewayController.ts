@@ -4,6 +4,8 @@ import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
 import { authenticate } from "../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../Middlewares/authorization/AuthorizeMiddleware";
+import { CreateUserDTO } from "../Domain/DTOs/CreateUserDTO";
+import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
 
 export class GatewayController {
   private readonly router: Router;
@@ -20,7 +22,11 @@ export class GatewayController {
 
     // Users
     this.router.get("/users", authenticate, authorize("admin"), this.getAllUsers.bind(this));
+    this.router.get("/users/search/:query", authenticate, authorize("admin"), this.searchUsers.bind(this));
     this.router.get("/users/:id", authenticate, authorize("admin", "seller"), this.getUserById.bind(this));
+    this.router.post("/users", authenticate, authorize("admin"), this.createUser.bind(this));
+    this.router.put("/users/:id", authenticate, authorize("admin"), this.updateUser.bind(this));
+    this.router.delete("/users/:id", authenticate, authorize("admin"), this.deleteUser.bind(this));
   }
 
   // Auth
@@ -49,7 +55,7 @@ export class GatewayController {
   private async getUserById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id, 10);
-      if (!req.user || req.user.id !== id) {
+      if (!req.user || (req.user.id !== id && req.user.role.toLowerCase() !== "admin")) {
         res.status(401).json({ message: "You can only access your own data!" });
         return;
       }
@@ -58,6 +64,47 @@ export class GatewayController {
       res.status(200).json(user);
     } catch (err) {
       res.status(404).json({ message: (err as Error).message });
+    }
+  }
+
+  private async createUser(req: Request, res: Response): Promise<void> {
+    try {
+      const data: CreateUserDTO = req.body;
+      const user = await this.gatewayService.createUser(data);
+      res.status(201).json(user);
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
+  }
+
+  private async updateUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const data: UpdateUserDTO = req.body;
+      const user = await this.gatewayService.updateUser(id, data);
+      res.status(200).json(user);
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
+  }
+
+  private async deleteUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deleteUser(id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(404).json({ message: (err as Error).message });
+    }
+  }
+
+  private async searchUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const query = req.params.query;
+      const users = await this.gatewayService.searchUsers(query);
+      res.status(200).json(users);
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
     }
   }
 
