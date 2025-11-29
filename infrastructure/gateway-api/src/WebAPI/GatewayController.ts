@@ -23,7 +23,7 @@ export class GatewayController {
     // Users
     this.router.get("/users", authenticate, authorize("admin"), this.getAllUsers.bind(this));
     this.router.get("/users/search/:query", authenticate, authorize("admin"), this.searchUsers.bind(this));
-    this.router.get("/users/:id", authenticate, authorize("admin", "seller"), this.getUserById.bind(this));
+    this.router.get("/users/:id", authenticate, authorize("admin", "seller", "sales_manager"), this.getUserById.bind(this));
     this.router.post("/users", authenticate, authorize("admin"), this.createUser.bind(this));
     this.router.put("/users/:id", authenticate, authorize("admin"), this.updateUser.bind(this));
     this.router.delete("/users/:id", authenticate, authorize("admin"), this.deleteUser.bind(this));
