@@ -26,16 +26,6 @@ export class AuthService implements IAuthService {
       return { authenificated: false };
     }
 
-    // Minimalna duzina lozinke
-    if (data.password.length < 6) {
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina usera
-    if (data.username.length < 3){
-      return { authenificated: false };
-    }
-
     return {
       authenificated: true,
       userData: {
@@ -74,21 +64,6 @@ export class AuthService implements IAuthService {
 
     // Minimalna duzina lozinke
     if (data.password.length < 6) {
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina usera
-    if (data.username.length < 3){
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina imena
-    if (data.firstName.length < 2) {
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina prezimena
-    if (data.lastName.length < 2){
       return { authenificated: false };
     }
 
