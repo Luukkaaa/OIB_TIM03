@@ -18,4 +18,15 @@ export class AuthAPI implements IAuthAPI {
   async register(data: RegistrationUserDTO): Promise<AuthResponseType> {
     return (await this.axiosInstance.post("/register", data)).data;
   }
+
+  async logout(token: string): Promise<{ success: boolean; message: string }> {
+    const authHeader = token ? `Bearer ${token}` : "";
+    return (
+      await this.axiosInstance.post(
+        "/logout",
+        {},
+        { headers: authHeader ? { Authorization: authHeader } : undefined }
+      )
+    ).data;
+  }
 }

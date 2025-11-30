@@ -5,4 +5,5 @@ import { AuthResponseType } from "../../types/AuthResponseType";
 export interface IAuthAPI {
   login(data: LoginUserDTO): Promise<AuthResponseType>;
   register(data: RegistrationUserDTO): Promise<AuthResponseType>;
+  logout(token: string): Promise<{ success: boolean; message: string }>;
 }

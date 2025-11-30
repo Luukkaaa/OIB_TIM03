@@ -6,14 +6,19 @@ import { AuthResponseType } from "../Domain/types/AuthResponse";
 import { UserDTO } from "../Domain/DTOs/UserDTO";
 import { CreateUserDTO } from "../Domain/DTOs/CreateUserDTO";
 import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
+import { AuditLogDTO } from "../Domain/DTOs/AuditLogDTO";
+import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
+import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
 
 export class GatewayService implements IGatewayService {
   private readonly authClient: AxiosInstance;
   private readonly userClient: AxiosInstance;
+  private readonly auditClient: AxiosInstance;
 
   constructor() {
     const authBaseURL = process.env.AUTH_SERVICE_API;
     const userBaseURL = process.env.USER_SERVICE_API;
+    const auditBaseURL = process.env.AUDIT_SERVICE_API;
 
     this.authClient = axios.create({
       baseURL: authBaseURL,
@@ -27,7 +32,11 @@ export class GatewayService implements IGatewayService {
       timeout: 5000,
     });
 
-    // TODO: ADD MORE CLIENTS
+    this.auditClient = axios.create({
+      baseURL: auditBaseURL,
+      headers: { "Content-Type": "application/json" },
+      timeout: 5000,
+    });
   }
 
   // Auth microservice
@@ -47,6 +56,15 @@ export class GatewayService implements IGatewayService {
     } catch {
       return { authenificated: false };
     }
+  }
+
+  async logout(token: string): Promise<{ success: boolean; message: string }> {
+    const response = await this.authClient.post<{ success: boolean; message: string }>(
+      "/auth/logout",
+      {},
+      { headers: { Authorization: token } }
+    );
+    return response.data;
   }
 
   // User microservice
@@ -79,5 +97,45 @@ export class GatewayService implements IGatewayService {
     return response.data;
   }
 
-  // TODO: ADD MORE API CALLS
+  // Audit logs (secured by JWT; forward token)
+  async getAllLogs(token: string): Promise<AuditLogDTO[]> {
+    const response = await this.auditClient.get<{ data: AuditLogDTO[] }>("/logs", {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async getLogById(token: string, id: number): Promise<AuditLogDTO> {
+    const response = await this.auditClient.get<{ data: AuditLogDTO }>(`/logs/${id}`, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async createLog(token: string, data: CreateAuditLogDTO): Promise<AuditLogDTO> {
+    const response = await this.auditClient.post<{ data: AuditLogDTO }>("/logs", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async updateLog(token: string, id: number, data: UpdateAuditLogDTO): Promise<AuditLogDTO> {
+    const response = await this.auditClient.put<{ data: AuditLogDTO }>(`/logs/${id}`, data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async deleteLog(token: string, id: number): Promise<void> {
+    await this.auditClient.delete(`/logs/${id}`, {
+      headers: { Authorization: token },
+    });
+  }
+
+  async searchLogs(token: string, query: string): Promise<AuditLogDTO[]> {
+    const response = await this.auditClient.get<{ data: AuditLogDTO[] }>(`/logs/search/${query}`, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
 }

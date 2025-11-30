@@ -6,6 +6,8 @@ import { authenticate } from "../Middlewares/authentification/AuthMiddleware";
 import { authorize } from "../Middlewares/authorization/AuthorizeMiddleware";
 import { CreateUserDTO } from "../Domain/DTOs/CreateUserDTO";
 import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
+import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
+import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
 
 export class GatewayController {
   private readonly router: Router;
@@ -19,6 +21,7 @@ export class GatewayController {
     // Auth
     this.router.post("/login", this.login.bind(this));
     this.router.post("/register", this.register.bind(this));
+    this.router.post("/logout", authenticate, this.logout.bind(this));
 
     // Users
     this.router.get("/users", authenticate, authorize("admin"), this.getAllUsers.bind(this));
@@ -27,6 +30,14 @@ export class GatewayController {
     this.router.post("/users", authenticate, authorize("admin"), this.createUser.bind(this));
     this.router.put("/users/:id", authenticate, authorize("admin"), this.updateUser.bind(this));
     this.router.delete("/users/:id", authenticate, authorize("admin"), this.deleteUser.bind(this));
+
+    // Audit logs (admin only)
+    this.router.get("/logs", authenticate, authorize("admin"), this.getAllLogs.bind(this));
+    this.router.get("/logs/search/:q", authenticate, authorize("admin"), this.searchLogs.bind(this));
+    this.router.get("/logs/:id", authenticate, authorize("admin"), this.getLogById.bind(this));
+    this.router.post("/logs", authenticate, authorize("admin"), this.createLog.bind(this));
+    this.router.put("/logs/:id", authenticate, authorize("admin"), this.updateLog.bind(this));
+    this.router.delete("/logs/:id", authenticate, authorize("admin"), this.deleteLog.bind(this));
   }
 
   // Auth
@@ -40,6 +51,16 @@ export class GatewayController {
     const data: RegistrationUserDTO = req.body;
     const result = await this.gatewayService.register(data);
     res.status(200).json(result);
+  }
+
+  private async logout(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const result = await this.gatewayService.logout(token);
+      res.status(200).json(result);
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
   }
 
   // Users
@@ -110,5 +131,72 @@ export class GatewayController {
 
   public getRouter(): Router {
     return this.router;
+  }
+
+  // Audit logs
+  private async getAllLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const logs = await this.gatewayService.getAllLogs(token);
+      res.status(200).json(logs);
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
+    }
+  }
+
+  private async getLogById(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const log = await this.gatewayService.getLogById(token, id);
+      res.status(200).json(log);
+    } catch (err) {
+      res.status(404).json({ message: (err as Error).message });
+    }
+  }
+
+  private async createLog(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data = req.body as CreateAuditLogDTO;
+      const created = await this.gatewayService.createLog(token, data);
+      res.status(201).json(created);
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
+  }
+
+  private async updateLog(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const data = req.body as UpdateAuditLogDTO;
+      const updated = await this.gatewayService.updateLog(token, id, data);
+      res.status(200).json(updated);
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
+  }
+
+  private async deleteLog(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deleteLog(token, id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(404).json({ message: (err as Error).message });
+    }
+  }
+
+  private async searchLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const q = req.params.q;
+      const logs = await this.gatewayService.searchLogs(token, q);
+      res.status(200).json(logs);
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
   }
 }

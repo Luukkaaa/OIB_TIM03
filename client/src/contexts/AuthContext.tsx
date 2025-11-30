@@ -4,6 +4,7 @@ import { isTokenExpired } from "../helpers/expiration_jwt_validate";
 import { readValueByKey, removeValueByKey, saveValueByKey } from "../helpers/local_storage";
 import { AuthContextType } from "../types/AuthContextType";
 import { AuthTokenClaimsType } from "../types/AuthTokenClaimsType";
+import { AuthAPI } from "../api/auth/AuthAPI";
 
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,7 +49,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const api = new AuthAPI();
+    const currentToken = token;
+
+    if (currentToken) {
+      try {
+        await api.logout(currentToken);
+      } catch (err) {
+        console.warn("Logout audit failed", err);
+      }
+    }
+
     setToken(null);
     setUser(null);
     removeValueByKey("authToken");

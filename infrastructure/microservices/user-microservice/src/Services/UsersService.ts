@@ -5,11 +5,13 @@ import { UserDTO } from "../Domain/DTOs/UserDTO";
 import { CreateUserDTO } from "../Domain/DTOs/CreateUserDTO";
 import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
 import bcrypt from "bcryptjs";
+import { AuditLogClient } from "./AuditLogClient";
+import { LogType } from "../audit-types/LogType";
 
 export class UsersService implements IUsersService {
   private readonly saltRounds: number = parseInt(process.env.SALT_ROUNDS || "10", 10);
 
-  constructor(private userRepository: Repository<User>) {}
+  constructor(private userRepository: Repository<User>, private auditClient: AuditLogClient) {}
 
   /**
    * Get all users
@@ -52,6 +54,7 @@ export class UsersService implements IUsersService {
     });
 
     const saved = await this.userRepository.save(newUser);
+    await this.auditClient.log(LogType.INFO, `Креиран корисник ${saved.username} (${saved.role})`);
     return this.toDTO(saved);
   }
 
@@ -79,6 +82,7 @@ export class UsersService implements IUsersService {
     if (data.profileImage !== undefined) user.profileImage = data.profileImage;
 
     const saved = await this.userRepository.save(user);
+    await this.auditClient.log(LogType.INFO, `Ажуриран корисник ${saved.username} (${saved.id})`);
     return this.toDTO(saved);
   }
 
@@ -90,6 +94,7 @@ export class UsersService implements IUsersService {
     if (result.affected === 0) {
       throw new Error(`User with ID ${id} not found`);
     }
+    await this.auditClient.log(LogType.INFO, `Обрисан корисник ID ${id}`);
   }
 
   /**

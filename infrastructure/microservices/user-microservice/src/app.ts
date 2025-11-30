@@ -11,6 +11,7 @@ import { UsersService } from './Services/UsersService';
 import { UsersController } from './WebAPI/controllers/UsersController';
 import { ILogerService } from './Domain/services/ILogerService';
 import { LogerService } from './Services/LogerService';
+import { AuditLogClient } from './Services/AuditLogClient';
 
 dotenv.config({ quiet: true });
 
@@ -34,7 +35,8 @@ initialize_database();
 const userRepository: Repository<User> = Db.getRepository(User);
 
 // Services
-const userService: IUsersService = new UsersService(userRepository);
+const auditLogClient = new AuditLogClient();
+const userService: IUsersService = new UsersService(userRepository, auditLogClient);
 const logerService: ILogerService = new LogerService();
 
 // WebAPI routes

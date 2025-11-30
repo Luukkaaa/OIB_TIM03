@@ -6,22 +6,27 @@ import { RegistrationUserDTO } from '../../Domain/DTOs/RegistrationUserDTO';
 import { validateLoginData } from '../validators/LoginValidator';
 import { validateRegistrationData } from '../validators/RegisterValidator';
 import { ILogerService } from '../../Domain/services/ILogerService';
+import { AuditLogClient } from '../../Services/AuditLogClient';
+import { LogType } from '../../audit-types/LogType';
 
 export class AuthController {
   private router: Router;
   private authService: IAuthService;
   private readonly logerService: ILogerService;
+  private readonly auditClient: AuditLogClient;
 
-  constructor(authService: IAuthService, logerService: ILogerService) {
+  constructor(authService: IAuthService, logerService: ILogerService, auditClient: AuditLogClient) {
     this.router = Router();
     this.authService = authService;
     this.logerService = logerService;
+    this.auditClient = auditClient;
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
     this.router.post('/auth/login', this.login.bind(this));
     this.router.post('/auth/register', this.register.bind(this));
+    this.router.post('/auth/logout', this.logout.bind(this));
   }
 
   /**
@@ -37,6 +42,7 @@ export class AuthController {
       // Validate login input
       const validation = validateLoginData(data);
       if (!validation.success) {
+        await this.auditClient.log(LogType.ERROR, `Пријава неуспешна зато што ${validation.message}`);
         res.status(400).json({ success: false, message: validation.message });
         return;
       }
@@ -61,6 +67,35 @@ export class AuthController {
   }
 
   /**
+   * POST /api/v1/auth/logout
+   * Logs user logout event (id/username/role from JWT if provided)
+   */
+  private async logout(req: Request, res: Response): Promise<void> {
+    try {
+      const authHeader = req.headers.authorization;
+      const secret = process.env.JWT_SECRET ?? "";
+
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        try {
+          const token = authHeader.split(" ")[1];
+          const decoded = jwt.verify(token, secret) as { username?: string; id?: number; role?: string };
+          const who = decoded.username ?? `user:${decoded.id ?? "unknown"}`;
+          await this.auditClient.log(LogType.INFO, `Одјава корисника ${who}`);
+        } catch {
+          await this.auditClient.log(LogType.WARNING, "Одјава неуспешна: неважећи токен");
+        }
+      } else {
+        await this.auditClient.log(LogType.INFO, "Одјава без токена (гост)");
+      }
+
+      res.status(200).json({ success: true, message: "Logged out" });
+    } catch (error) {
+      this.logerService.log(error as string);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
+
+  /**
    * POST /api/v1/auth/register
    * Registers a new userData?
    */
@@ -73,6 +108,7 @@ export class AuthController {
       // Validate registration input
       const validation = validateRegistrationData(data);
       if (!validation.success) {
+        await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што ${validation.message}`);
         res.status(400).json({ success: false, message: validation.message });
         return;
       }
