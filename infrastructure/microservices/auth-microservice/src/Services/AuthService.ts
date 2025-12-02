@@ -17,40 +17,35 @@ export class AuthService implements IAuthService {
    * Login user
    */
   async login(data: LoginUserDTO): Promise<AuthResponseType> {
+    // Osnovne validacije pre rada sa bazom
+    if (!data.username || !data.password) {
+      await this.auditClient.log(LogType.ERROR, "Prijava neuspesna: korisnicko ime i lozinka su obavezni");
+      return { authenificated: false };
+    }
+    if (data.username.length < 3) {
+      await this.auditClient.log(LogType.ERROR, `Prijava neuspesna: korisnicko ime je prekratko (${data.username})`);
+      return { authenificated: false };
+    }
+    if (data.password.length < 6) {
+      await this.auditClient.log(LogType.ERROR, `Prijava neuspesna: lozinka je prekratka za korisnika ${data.username}`);
+      return { authenificated: false };
+    }
 
-    //  Provera da li postoji korisnik sa prikazanim korisnickim imenom u sistemu
+    // Provera da li postoji korisnik
     const user = await this.userRepository.findOne({ where: { username: data.username } });
     if (!user) {
-      await this.auditClient.log(LogType.WARNING, `Пријава одбијена зато што корисник ${data.username} не постоји`);
+      await this.auditClient.log(LogType.WARNING, `Prijava neuspesna: korisnik ${data.username} ne postoji`);
       return { authenificated: false };
     }
 
-    // Provera da li je tacna lozinka za postojeceg korisnika u sistemu
+    // Provera lozinke
     const passwordMatches = await bcrypt.compare(data.password, user.password);
     if (!passwordMatches) {
-      await this.auditClient.log(LogType.WARNING, `Пријава одбијена зато што је нетачна лозинка за корисника ${data.username}`);
+      await this.auditClient.log(LogType.WARNING, `Prijava neuspesna: pogresna lozinka za korisnika ${data.username}`);
       return { authenificated: false };
     }
 
-    // Oba polja se moraju popuniti
-    if (!data.username || !data.password) {
-      await this.auditClient.log(LogType.ERROR, `Пријава неуспешна зато што обавезна поља недостају`);
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina lozinke
-    if (data.password.length < 6) {
-      await this.auditClient.log(LogType.ERROR, `Пријава неуспешна зато што је кратка лозинка за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina usera
-    if (data.username.length < 3) {
-      await this.auditClient.log(LogType.ERROR, `Пријава неуспешна зато што је кратко корисничко име за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    await this.auditClient.log(LogType.INFO, `Пријава прихваћена за корисника ${data.username}`);
+    await this.auditClient.log(LogType.INFO, `Korisnik ${data.username} se uspesno prijavio`);
 
     return {
       authenificated: true,
@@ -66,58 +61,45 @@ export class AuthService implements IAuthService {
    * Register new user
    */
   async register(data: RegistrationUserDTO): Promise<AuthResponseType> {
+    // Osnovne validacije pre rada sa bazom
+    if (!data.username || !data.password || !data.email || !data.firstName || !data.lastName || !data.role) {
+      await this.auditClient.log(LogType.ERROR, "Registracija neuspesna: nedostaju obavezna polja");
+      return { authenificated: false };
+    }
+    if (data.username.length < 3) {
+      await this.auditClient.log(LogType.ERROR, `Registracija neuspesna: korisnicko ime je prekratko (${data.username})`);
+      return { authenificated: false };
+    }
+    if (data.password.length < 6) {
+      await this.auditClient.log(LogType.ERROR, `Registracija neuspesna: lozinka je prekratka za korisnika ${data.username}`);
+      return { authenificated: false };
+    }
+    if (data.firstName.length < 2) {
+      await this.auditClient.log(LogType.ERROR, `Registracija neuspesna: ime je prekratko za korisnika ${data.username}`);
+      return { authenificated: false };
+    }
+    if (data.lastName.length < 2) {
+      await this.auditClient.log(LogType.ERROR, `Registracija neuspesna: prezime je prekratko za korisnika ${data.username}`);
+      return { authenificated: false };
+    }
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+    if (!emailRegex.test(data.email)) {
+      await this.auditClient.log(LogType.ERROR, `Registracija neuspesna: neispravan email za korisnika ${data.username}`);
+      return { authenificated: false };
+    }
 
-    // Provera da li korsisnik sa datim imenom ili emailom vec postoji
+    // Provera jedinstvenosti
     const existingUser = await this.userRepository.findOne({
       where: [{ username: data.username }, { email: data.email }],
     });
-
     if (existingUser) {
-      await this.auditClient.log(LogType.WARNING, `Регистрација одбијена зато што је у питању дупликат за корисника ${data.username}/${data.email}`);
+      await this.auditClient.log(LogType.WARNING, `Registracija neuspesna: korisnik ili email vec postoje (${data.username}/${data.email})`);
       return { authenificated: false };
     }
 
-    // Xesiranje lozinke
+    // Hesiranje lozinke i cuvanje
     const hashedPassword = await bcrypt.hash(data.password, this.saltRounds);
 
-    // Osnovna validacija za obavezna polja
-    if (!data.username || !data.password || !data.email || !data.firstName || !data.lastName || !data.role) {
-      await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што обавезна поља недостају`);
-      return { authenificated: false };
-    }
-
-    // Regeks provera za e-mail
-    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
-    if (!emailRegex.test(data.email)) {
-      await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што је неважећи емаил за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina lozinke
-    if (data.password.length < 6) {
-      await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што је кратка лозинка за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina usera
-    if (data.username.length < 3) {
-      await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што је кратко корисничко име за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina imena
-    if (data.firstName.length < 2) {
-      await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што је кратко име за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    // Minimalna duzina prezimena
-    if (data.lastName.length < 2) {
-      await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што је кратко презиме за корисника ${data.username}`);
-      return { authenificated: false };
-    }
-
-    // Dodavanje novog korisnika
     const newUser = this.userRepository.create({
       username: data.username,
       firstName: data.firstName,
@@ -130,7 +112,7 @@ export class AuthService implements IAuthService {
 
     const savedUser = await this.userRepository.save(newUser);
 
-    await this.auditClient.log(LogType.INFO, `Регистрација прихваћена за корисника ${savedUser.username}`);
+    await this.auditClient.log(LogType.INFO, `Registrovan novi korisnik ${savedUser.username} (${savedUser.role})`);
 
     return {
       authenificated: true,

@@ -13,7 +13,13 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
 
   try {
     const secret = process.env.JWT_SECRET || "";
-    jwt.verify(token, secret);
+    const decoded = jwt.verify(token, secret) as { role?: string };
+
+    if (!decoded.role || decoded.role.toLowerCase() !== "admin") {
+      res.status(403).json({ success: false, message: "Admin role required" });
+      return;
+    }
+
     next();
   } catch (err) {
     res.status(401).json({ success: false, message: "Invalid token provided!" });

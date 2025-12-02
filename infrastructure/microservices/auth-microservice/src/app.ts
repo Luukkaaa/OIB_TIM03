@@ -12,6 +12,7 @@ import { AuthController } from './WebAPI/controllers/AuthController';
 import { ILogerService } from './Domain/services/ILogerService';
 import { LogerService } from './Services/LogerService';
 import { AuditLogClient } from './Services/AuditLogClient';
+import { requireServiceKey } from './WebAPI/middlewares/ServiceAuthMiddleware';
 
 dotenv.config({ quiet: true });
 
@@ -30,6 +31,9 @@ app.use(cors({
 app.use(express.json());
 
 initialize_database();
+
+// Dozvoljava pristup samo gateway-u (API key)
+app.use(requireServiceKey);
 
 // ORM Repositories
 const userRepository: Repository<User> = Db.getRepository(User);

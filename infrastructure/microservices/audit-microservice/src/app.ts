@@ -9,6 +9,7 @@ import { Repository } from "typeorm";
 import { AuditService } from "./services/AuditService";
 import { AuditController } from "./webapi/controllers/AuditController";
 import { authenticate } from "./webapi/middlewares/AuthMiddleware";
+import { requireServiceKey } from "./webapi/middlewares/ServiceAuthMiddleware";
 
 dotenv.config({ quiet: true });
 
@@ -27,6 +28,9 @@ app.use(
 app.use(express.json());
 
 initialize_database();
+
+// Dozvoli iskljucivo gateway-u pristup mikroservisu
+app.use(requireServiceKey);
 
 const auditRepository: Repository<AuditLog> = Db.getRepository(AuditLog);
 const auditService = new AuditService(auditRepository);

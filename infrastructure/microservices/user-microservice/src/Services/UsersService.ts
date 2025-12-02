@@ -18,7 +18,7 @@ export class UsersService implements IUsersService {
    */
   async getAllUsers(): Promise<UserDTO[]> {
     const users = await this.userRepository.find();
-    return users.map(u => this.toDTO(u));
+    return users.map((u) => this.toDTO(u));
   }
 
   /**
@@ -54,7 +54,7 @@ export class UsersService implements IUsersService {
     });
 
     const saved = await this.userRepository.save(newUser);
-    await this.auditClient.log(LogType.INFO, `Креиран корисник ${saved.username} (${saved.role})`);
+    await this.auditClient.log(LogType.INFO, `Kreiran korisnik ${saved.username} sa ulogom ${saved.role}`);
     return this.toDTO(saved);
   }
 
@@ -82,7 +82,7 @@ export class UsersService implements IUsersService {
     if (data.profileImage !== undefined) user.profileImage = data.profileImage;
 
     const saved = await this.userRepository.save(user);
-    await this.auditClient.log(LogType.INFO, `Ажуриран корисник ${saved.username} (${saved.id})`);
+    await this.auditClient.log(LogType.INFO, `Azuriran korisnik ${saved.username} (ID ${saved.id})`);
     return this.toDTO(saved);
   }
 
@@ -94,7 +94,7 @@ export class UsersService implements IUsersService {
     if (result.affected === 0) {
       throw new Error(`User with ID ${id} not found`);
     }
-    await this.auditClient.log(LogType.INFO, `Обрисан корисник ID ${id}`);
+    await this.auditClient.log(LogType.INFO, `Obrisan korisnik sa ID ${id}`);
   }
 
   /**
@@ -109,7 +109,7 @@ export class UsersService implements IUsersService {
       .orWhere("user.email LIKE :q", { q: `%${query}%` })
       .getMany();
 
-    return users.map(u => this.toDTO(u));
+    return users.map((u) => this.toDTO(u));
   }
 
   /**

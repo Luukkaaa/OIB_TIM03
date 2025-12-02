@@ -1,13 +1,13 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response, Router } from "express";
 import jwt from "jsonwebtoken";
-import { IAuthService } from '../../Domain/services/IAuthService';
-import { LoginUserDTO } from '../../Domain/DTOs/LoginUserDTO';
-import { RegistrationUserDTO } from '../../Domain/DTOs/RegistrationUserDTO';
-import { validateLoginData } from '../validators/LoginValidator';
-import { validateRegistrationData } from '../validators/RegisterValidator';
-import { ILogerService } from '../../Domain/services/ILogerService';
-import { AuditLogClient } from '../../Services/AuditLogClient';
-import { LogType } from '../../audit-types/LogType';
+import { IAuthService } from "../../Domain/services/IAuthService";
+import { LoginUserDTO } from "../../Domain/DTOs/LoginUserDTO";
+import { RegistrationUserDTO } from "../../Domain/DTOs/RegistrationUserDTO";
+import { validateLoginData } from "../validators/LoginValidator";
+import { validateRegistrationData } from "../validators/RegisterValidator";
+import { ILogerService } from "../../Domain/services/ILogerService";
+import { AuditLogClient } from "../../Services/AuditLogClient";
+import { LogType } from "../../audit-types/LogType";
 
 export class AuthController {
   private router: Router;
@@ -24,9 +24,9 @@ export class AuthController {
   }
 
   private initializeRoutes(): void {
-    this.router.post('/auth/login', this.login.bind(this));
-    this.router.post('/auth/register', this.register.bind(this));
-    this.router.post('/auth/logout', this.logout.bind(this));
+    this.router.post("/auth/login", this.login.bind(this));
+    this.router.post("/auth/register", this.register.bind(this));
+    this.router.post("/auth/logout", this.logout.bind(this));
   }
 
   /**
@@ -42,7 +42,7 @@ export class AuthController {
       // Validate login input
       const validation = validateLoginData(data);
       if (!validation.success) {
-        await this.auditClient.log(LogType.ERROR, `Пријава неуспешна зато што ${validation.message}`);
+        await this.auditClient.log(LogType.ERROR, `Prijava odbijena: ${validation.message}`);
         res.status(400).json({ success: false, message: validation.message });
         return;
       }
@@ -53,7 +53,7 @@ export class AuthController {
         const token = jwt.sign(
           { id: result.userData?.id, username: result.userData?.username, role: result.userData?.role },
           process.env.JWT_SECRET ?? "",
-          { expiresIn: '6h' }
+          { expiresIn: "6h" }
         );
 
         res.status(200).json({ success: true, token });
@@ -61,7 +61,7 @@ export class AuthController {
         res.status(401).json({ success: false, message: "Invalid credentials!" });
       }
     } catch (error) {
-      this.logerService.log(error as string)
+      this.logerService.log(error as string);
       res.status(500).json({ success: false, message: "Server error" });
     }
   }
@@ -80,12 +80,12 @@ export class AuthController {
           const token = authHeader.split(" ")[1];
           const decoded = jwt.verify(token, secret) as { username?: string; id?: number; role?: string };
           const who = decoded.username ?? `user:${decoded.id ?? "unknown"}`;
-          await this.auditClient.log(LogType.INFO, `Одјава корисника ${who}`);
+          await this.auditClient.log(LogType.INFO, `Korisnik ${who} se odjavio`);
         } catch {
-          await this.auditClient.log(LogType.WARNING, "Одјава неуспешна: неважећи токен");
+          await this.auditClient.log(LogType.WARNING, "Odjava neuspesna: neispravan token");
         }
       } else {
-        await this.auditClient.log(LogType.INFO, "Одјава без токена (гост)");
+        await this.auditClient.log(LogType.INFO, "Odjava pozvana bez tokena");
       }
 
       res.status(200).json({ success: true, message: "Logged out" });
@@ -108,7 +108,7 @@ export class AuthController {
       // Validate registration input
       const validation = validateRegistrationData(data);
       if (!validation.success) {
-        await this.auditClient.log(LogType.ERROR, `Регистрација неуспешна зато што ${validation.message}`);
+        await this.auditClient.log(LogType.ERROR, `Registracija odbijena: ${validation.message}`);
         res.status(400).json({ success: false, message: validation.message });
         return;
       }
@@ -119,15 +119,18 @@ export class AuthController {
         const token = jwt.sign(
           { id: result.userData?.id, username: result.userData?.username, role: result.userData?.role },
           process.env.JWT_SECRET ?? "",
-          { expiresIn: '6h' }
+          { expiresIn: "6h" }
         );
 
         res.status(201).json({ success: true, message: "Registration successful", token });
       } else {
-        res.status(400).json({ success: false, message: "Registration failed. Username or email may already exist." });
+        res.status(400).json({
+          success: false,
+          message: "Registration failed. Username or email may already exist.",
+        });
       }
     } catch (error) {
-      this.logerService.log(error as string)
+      this.logerService.log(error as string);
       res.status(500).json({ success: false, message: "Server error" });
     }
   }

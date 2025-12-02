@@ -19,22 +19,23 @@ export class GatewayService implements IGatewayService {
     const authBaseURL = process.env.AUTH_SERVICE_API;
     const userBaseURL = process.env.USER_SERVICE_API;
     const auditBaseURL = process.env.AUDIT_SERVICE_API;
+    const serviceKey = process.env.SERVICE_API_KEY ?? "";
 
     this.authClient = axios.create({
       baseURL: authBaseURL,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
       timeout: 5000,
     });
 
     this.userClient = axios.create({
       baseURL: userBaseURL,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
       timeout: 5000,
     });
 
     this.auditClient = axios.create({
       baseURL: auditBaseURL,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
       timeout: 5000,
     });
   }

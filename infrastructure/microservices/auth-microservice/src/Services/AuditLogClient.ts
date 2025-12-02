@@ -9,10 +9,11 @@ export class AuditLogClient {
   constructor() {
     const baseURL = process.env.AUDIT_SERVICE_API || "http://localhost:6000/api/v1";
     const secret = process.env.JWT_SECRET || "";
+    const serviceKey = process.env.SERVICE_API_KEY || "";
 
     this.client = axios.create({
       baseURL,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
       timeout: 3000,
     });
 
