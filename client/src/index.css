@@ -119,22 +119,22 @@ a:active {
 /* Material Effects */
 .mica {
   background: var(--win11-mica-bg);
-  backdrop-filter: blur(80px) saturate(180%);
   -webkit-backdrop-filter: blur(80px) saturate(180%);
+  backdrop-filter: blur(80px) saturate(180%);
 }
 
 .acrylic {
   background: var(--win11-acrylic-bg);
-  backdrop-filter: blur(40px) saturate(150%);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
+  backdrop-filter: blur(40px) saturate(150%);
   border: 1px solid var(--win11-divider);
 }
 
 /* Card Component */
 .card {
   background: var(--win11-card-bg);
-  backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
   border-radius: var(--win11-radius-large);
   padding: 24px;
   box-shadow: var(--win11-shadow-medium);
@@ -193,8 +193,8 @@ button:disabled, .btn:disabled {
   background: var(--win11-card-bg);
   color: var(--win11-text-primary);
   border: 1px solid var(--win11-divider);
-  backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
 }
 
 .btn-standard:hover:not(:disabled) {
@@ -235,8 +235,8 @@ select {
   border: 2px solid var(--win11-divider);
   border-radius: var(--win11-radius-small);
   background: var(--win11-card-bg);
-  backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
   color: var(--win11-text-primary);
   font-size: 14px;
   font-family: inherit;
@@ -455,8 +455,8 @@ hr {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -469,8 +469,8 @@ hr {
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   top: 0;
   left: 0;
   right: 0;
@@ -489,8 +489,8 @@ hr {
 /* Window/Dialog */
 .window {
   background: var(--win11-acrylic-bg);
-  backdrop-filter: blur(40px) saturate(150%);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
+  backdrop-filter: blur(40px) saturate(150%);
   border-radius: var(--win11-radius-large);
   box-shadow: var(--win11-shadow-xlarge);
   border: 1px solid var(--win11-divider);
@@ -517,8 +517,8 @@ hr {
   align-items: center;
   height: 40px;
   background: var(--win11-mica-bg);
-  backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
   border-bottom: 1px solid var(--win11-divider);
   padding: 0 12px;
 }

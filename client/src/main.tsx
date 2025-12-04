@@ -5,11 +5,14 @@ import "./index.css";
 import { TitleBar } from "../electron/window_frame/WindowFrame.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
+import { AuthAPI } from "./api/auth/AuthAPI";
+
+const authApi = new AuthAPI();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
+      <AuthProvider authAPI={authApi}>
         <TitleBar />
         <div style={{ paddingTop: 0 }}>
           <App />

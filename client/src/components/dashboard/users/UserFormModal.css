@@ -1,0 +1,35 @@
+.user-modal-window {
+  width: 520px;
+  max-width: 95%;
+}
+
+.user-modal-content {
+  padding: 18px 20px;
+}
+
+.user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.user-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-error {
+  padding: 10px 12px;
+  background: rgba(196, 43, 28, 0.12);
+  border-color: var(--win11-close-hover);
+}
+
+.user-error-text {
+  font-size: 13px;
+}
+
+.user-footer {
+  margin-top: 6px;
+}

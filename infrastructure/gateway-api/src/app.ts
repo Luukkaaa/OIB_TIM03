@@ -11,8 +11,12 @@ dotenv.config({ quiet: true });
 const app = express();
 
 // Read CORS settings from environment
-const corsOrigin = process.env.CORS_ORIGIN ?? "*";
-const corsMethods = process.env.CORS_METHODS?.split(",").map(m => m.trim()) ?? ["POST"];
+const corsOrigin = process.env.CORS_ORIGIN;
+const corsMethods = process.env.CORS_METHODS?.split(",").map(m => m.trim());
+
+if (!corsOrigin || !corsMethods) {
+  throw new Error("CORS_ORIGIN i CORS_METHODS moraju biti definisani u .env za gateway-api");
+}
 
 // Protected microservice from unauthorized access
 app.use(cors({
