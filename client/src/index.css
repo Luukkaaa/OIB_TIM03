@@ -279,6 +279,23 @@ select {
   padding-right: 36px;
 }
 
+/* Auth-like inputs (tamni, sivi border, plavi fokus) */
+.auth-input {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 12px 14px;
+  width: 100%;
+  color: #fff;
+  font-size: 14px;
+}
+
+.auth-input:focus {
+  border-color: var(--win11-accent);
+  box-shadow: 0 0 0 2px rgba(96, 205, 255, 0.35);
+  outline: none;
+}
+
 /* Checkbox */
 input[type="checkbox"] {
   width: 20px;
