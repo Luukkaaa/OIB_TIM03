@@ -1,3 +1,13 @@
 /release/
 /dist/
 /dist-electron/
+/node_modules/
+/release/
+/dist/
+/dist-electron/
+/client/node_modules/
+/client/release/
+/client/dist/
+/client/dist-electron/
+/infrastructure/**/node_modules/
+*.log
