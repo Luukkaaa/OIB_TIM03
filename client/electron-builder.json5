@@ -18,6 +18,8 @@
     "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
   },
   "win": {
+    "signAndEditExecutable": false,
+    "verifyUpdateCodeSignature": false,
     "target": [
       {
         "target": "nsis",

@@ -109,6 +109,14 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
     return `data:image/png;base64,${user.profileImage}`;
   };
 
+  const badgeForRole = (role: string) => {
+    const r = role?.toUpperCase();
+    if (r === "ADMIN") return { label: "Admin", bg: "#d32f2f33" };
+    if (r === "SALES_MANAGER") return { label: "Sales manager", bg: "#1976d233" };
+    if (r === "SELLER") return { label: "Seller", bg: "#388e3c33" };
+    return { label: role, bg: "var(--win11-subtle)" };
+  };
+
   return (
     <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
       <div className="flex items-center justify-between gap-3">
@@ -175,11 +183,24 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
                       </div>
                     </td>
                     <td style={{ padding: "10px 12px" }}>{user.firstName} {user.lastName}</td>
-                    <td style={{ padding: "10px 12px" }}>{user.email}</td>
-                    <td style={{ padding: "10px 12px" }}>
-                      <span className="badge" style={{ padding: "4px 8px", borderRadius: "8px", background: "var(--win11-subtle)" }}>
-                        {user.role}
-                      </span>
+                  <td style={{ padding: "10px 12px" }}>{user.email}</td>
+                  <td style={{ padding: "10px 12px" }}>
+                      {(() => {
+                        const badge = badgeForRole(user.role);
+                        return (
+                          <span
+                            className="badge"
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: "8px",
+                              background: badge.bg,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {badge.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td style={{ padding: "10px 12px" }}>
                       <div className="flex items-center gap-2">

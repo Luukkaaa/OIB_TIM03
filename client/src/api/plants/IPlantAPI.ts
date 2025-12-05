@@ -1,9 +1,12 @@
+import { CreatePlantDTO } from "../../models/plants/CreatePlantDTO";
 import { PlantDTO } from "../../models/plants/PlantDTO";
+import { UpdatePlantDTO } from "../../models/plants/UpdatePlantDTO";
 
 export interface IPlantAPI {
   getAllPlants(token: string): Promise<PlantDTO[]>;
   getPlantById(id: number, token: string): Promise<PlantDTO>;
-  createPlant(plant: PlantDTO, token: string): Promise<PlantDTO>;
-  updatePlant(id: number, plant: PlantDTO, token: string): Promise<PlantDTO>;
-  deletePlant(id: number, token: string): Promise<void>;
+  searchPlants(token: string, query: string): Promise<PlantDTO[]>;
+  createPlant(token: string, plant: CreatePlantDTO): Promise<PlantDTO>;
+  updatePlant(token: string, id: number, plant: UpdatePlantDTO): Promise<PlantDTO>;
+  deletePlant(token: string, id: number): Promise<void>;
 }

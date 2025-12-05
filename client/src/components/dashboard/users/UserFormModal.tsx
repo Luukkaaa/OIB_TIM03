@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { UserRole } from "../../../enums/UserRole";
 import { CreateUserDTO } from "../../../models/users/CreateUserDTO";
 import { UpdateUserDTO } from "../../../models/users/UpdateUserDTO";
@@ -41,6 +41,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
   const [form, setForm] = useState<FormState>(defaultState);
   const [error, setError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (isOpen && initial) {
@@ -58,6 +59,36 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
       setForm(defaultState);
     }
   }, [isOpen, initial]);
+
+  // Trap tab unutar modala
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return;
+    const container = modalRef.current;
+    const focusable = Array.from(
+      container.querySelectorAll<HTMLElement>("input, select, textarea, button")
+    ).filter((el) => !el.hasAttribute("disabled"));
+    focusable[0]?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (!focusable.length) return;
+      const active = document.activeElement as HTMLElement;
+      const idx = focusable.indexOf(active);
+      const lastIdx = focusable.length - 1;
+      if (e.shiftKey) {
+        const prev = idx <= 0 ? focusable[lastIdx] : focusable[idx - 1];
+        prev.focus();
+        e.preventDefault();
+      } else {
+        const next = idx === lastIdx ? focusable[0] : focusable[idx + 1];
+        next.focus();
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+    return () => container.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -129,7 +160,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
 
   return (
     <div className="overlay">
-      <div className="window user-modal-window">
+      <div className="window user-modal-window" ref={modalRef} tabIndex={-1}>
         <div className="titlebar">
           <div className="titlebar-icon">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">

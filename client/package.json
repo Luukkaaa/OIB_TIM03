@@ -2,6 +2,8 @@
   "name": "client",
   "private": true,
   "version": "1.0.0",
+  "description": "Desktop app for Парфимерија О'Сињел Де Ор",
+  "author": "Parfimerija tim",
   "type": "module",
   "scripts": {
     "dev": "vite",

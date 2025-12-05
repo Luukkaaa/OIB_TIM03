@@ -48,7 +48,7 @@ const userService: IUsersService = new UsersService(userRepository, auditLogClie
 const logerService: ILogerService = new LogerService();
 
 // WebAPI routes
-const userController = new UsersController(userService, logerService);
+const userController = new UsersController(userService, logerService, auditLogClient);
 
 // Registering routes
 app.use('/api/v1', userController.getRouter());

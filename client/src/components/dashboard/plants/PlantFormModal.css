@@ -1,0 +1,35 @@
+.plant-modal-window {
+  width: 520px;
+  max-width: 95%;
+}
+
+.plant-modal-content {
+  padding: 18px 20px;
+}
+
+.plant-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.plant-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.plant-error {
+  padding: 10px 12px;
+  background: rgba(196, 43, 28, 0.12);
+  border-color: var(--win11-close-hover);
+}
+
+.plant-error-text {
+  font-size: 13px;
+}
+
+.plant-footer {
+  margin-top: 6px;
+}

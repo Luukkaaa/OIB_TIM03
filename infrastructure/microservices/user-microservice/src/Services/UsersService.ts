@@ -18,6 +18,7 @@ export class UsersService implements IUsersService {
    */
   async getAllUsers(): Promise<UserDTO[]> {
     const users = await this.userRepository.find();
+    await this.auditClient.log(LogType.INFO, `Dohvaceni svi korisnici (${users.length})`);
     return users.map((u) => this.toDTO(u));
   }
 
@@ -26,7 +27,11 @@ export class UsersService implements IUsersService {
    */
   async getUserById(id: number): Promise<UserDTO> {
     const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) throw new Error(`User with ID ${id} not found`);
+    if (!user) {
+      await this.auditClient.log(LogType.WARNING, `Korisnik sa ID ${id} nije pronadjen`);
+      throw new Error(`User with ID ${id} not found`);
+    }
+    await this.auditClient.log(LogType.INFO, `Dohvacen korisnik ${user.username} (ID ${user.id})`);
     return this.toDTO(user);
   }
 
@@ -38,6 +43,10 @@ export class UsersService implements IUsersService {
       where: [{ username: data.username }, { email: data.email }],
     });
     if (existing) {
+      await this.auditClient.log(
+        LogType.WARNING,
+        `Neuspesno kreiranje korisnika - username/email vec postoji (${data.username}/${data.email})`
+      );
       throw new Error("Username or email already exists");
     }
 
@@ -63,11 +72,27 @@ export class UsersService implements IUsersService {
    */
   async updateUser(id: number, data: UpdateUserDTO): Promise<UserDTO> {
     const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) throw new Error(`User with ID ${id} not found`);
+    if (!user) {
+      await this.auditClient.log(LogType.WARNING, `Azuriranje neuspesno - korisnik sa ID ${id} nije pronadjen`);
+      throw new Error(`User with ID ${id} not found`);
+    }
+
+    if (data.username) {
+      const usernameConflict = await this.userRepository.findOne({ where: { username: data.username } });
+      if (usernameConflict && usernameConflict.id !== id) {
+        await this.auditClient.log(
+          LogType.WARNING,
+          `Azuriranje korisnika ${id} neuspesno - username zauzet (${data.username})`
+        );
+        throw new Error("Username already in use");
+      }
+      user.username = data.username;
+    }
 
     if (data.email) {
       const conflict = await this.userRepository.findOne({ where: { email: data.email } });
       if (conflict && conflict.id !== id) {
+        await this.auditClient.log(LogType.WARNING, `Azuriranje korisnika ${id} neuspesno - email zauzet (${data.email})`);
         throw new Error("Email already in use");
       }
     }
@@ -92,6 +117,7 @@ export class UsersService implements IUsersService {
   async deleteUser(id: number): Promise<void> {
     const result = await this.userRepository.delete({ id });
     if (result.affected === 0) {
+      await this.auditClient.log(LogType.WARNING, `Brisanje neuspesno - korisnik sa ID ${id} nije pronadjen`);
       throw new Error(`User with ID ${id} not found`);
     }
     await this.auditClient.log(LogType.INFO, `Obrisan korisnik sa ID ${id}`);
@@ -108,6 +134,11 @@ export class UsersService implements IUsersService {
       .orWhere("user.lastName LIKE :q", { q: `%${query}%` })
       .orWhere("user.email LIKE :q", { q: `%${query}%` })
       .getMany();
+
+    await this.auditClient.log(
+      LogType.INFO,
+      `Pretraga korisnika upit="${query}" -> ${users.length} rezultat(a)`
+    );
 
     return users.map((u) => this.toDTO(u));
   }

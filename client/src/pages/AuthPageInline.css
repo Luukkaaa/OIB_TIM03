@@ -1,0 +1,7 @@
+.auth-overlay {
+  position: fixed;
+}
+
+.auth-titlebar-img {
+  margin-top: -5px;
+}

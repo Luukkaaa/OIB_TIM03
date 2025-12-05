@@ -9,17 +9,22 @@ import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
 import { AuditLogDTO } from "../Domain/DTOs/AuditLogDTO";
 import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
 import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
+import { PlantDTO } from "../Domain/DTOs/PlantDTO";
+import { CreatePlantDTO } from "../Domain/DTOs/CreatePlantDTO";
+import { UpdatePlantDTO } from "../Domain/DTOs/UpdatePlantDTO";
 
 export class GatewayService implements IGatewayService {
   private readonly authClient: AxiosInstance;
   private readonly userClient: AxiosInstance;
   private readonly auditClient: AxiosInstance;
+  private readonly plantClient: AxiosInstance;
 
   constructor() {
-    const authBaseURL = process.env.AUTH_SERVICE_API;
-    const userBaseURL = process.env.USER_SERVICE_API;
-    const auditBaseURL = process.env.AUDIT_SERVICE_API;
-    const serviceKey = process.env.SERVICE_API_KEY ?? "";
+    const authBaseURL = process.env.AUTH_SERVICE_API || "http://localhost:5544/api/v1";
+    const userBaseURL = process.env.USER_SERVICE_API || "http://localhost:6754/api/v1";
+    const auditBaseURL = process.env.AUDIT_SERVICE_API || "http://localhost:6000/api/v1";
+    const plantBaseURL = process.env.PLANT_SERVICE_API || "http://localhost:6200/api/v1";
+    const serviceKey = process.env.SERVICE_API_KEY ?? "dev-gateway-key";
 
     this.authClient = axios.create({
       baseURL: authBaseURL,
@@ -35,6 +40,12 @@ export class GatewayService implements IGatewayService {
 
     this.auditClient = axios.create({
       baseURL: auditBaseURL,
+      headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
+      timeout: 5000,
+    });
+
+    this.plantClient = axios.create({
+      baseURL: plantBaseURL,
       headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
       timeout: 5000,
     });
@@ -138,5 +149,47 @@ export class GatewayService implements IGatewayService {
       headers: { Authorization: token },
     });
     return response.data.data;
+  }
+
+  // Plant microservice
+  async getAllPlants(token: string): Promise<PlantDTO[]> {
+    const response = await this.plantClient.get<{ data: PlantDTO[] }>("/plants", {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async getPlantById(token: string, id: number): Promise<PlantDTO> {
+    const response = await this.plantClient.get<{ data: PlantDTO }>(`/plants/${id}`, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async searchPlants(token: string, query: string): Promise<PlantDTO[]> {
+    const response = await this.plantClient.get<{ data: PlantDTO[] }>(`/plants/search/${query}`, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async createPlant(token: string, data: CreatePlantDTO): Promise<PlantDTO> {
+    const response = await this.plantClient.post<{ data: PlantDTO }>("/plants", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async updatePlant(token: string, id: number, data: UpdatePlantDTO): Promise<PlantDTO> {
+    const response = await this.plantClient.put<{ data: PlantDTO }>(`/plants/${id}`, data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async deletePlant(token: string, id: number): Promise<void> {
+    await this.plantClient.delete(`/plants/${id}`, {
+      headers: { Authorization: token },
+    });
   }
 }

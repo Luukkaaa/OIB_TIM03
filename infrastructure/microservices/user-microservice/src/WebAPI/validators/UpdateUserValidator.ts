@@ -8,6 +8,10 @@ export function validateUpdateUser(data: UpdateUserDTO): { success: boolean; mes
     return { success: false, message: "No data provided for update" };
   }
 
+  if (data.username !== undefined && data.username.trim().length < 3) {
+    return { success: false, message: "Username must be at least 3 characters long" };
+  }
+
   if (data.firstName !== undefined && data.firstName.trim().length < 2) {
     return { success: false, message: "First name must be at least 2 characters long" };
   }

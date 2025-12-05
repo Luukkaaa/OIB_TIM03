@@ -7,6 +7,9 @@ import { UpdateUserDTO } from "../DTOs/UpdateUserDTO";
 import { AuditLogDTO } from "../DTOs/AuditLogDTO";
 import { CreateAuditLogDTO } from "../DTOs/CreateAuditLogDTO";
 import { UpdateAuditLogDTO } from "../DTOs/UpdateAuditLogDTO";
+import { PlantDTO } from "../DTOs/PlantDTO";
+import { CreatePlantDTO } from "../DTOs/CreatePlantDTO";
+import { UpdatePlantDTO } from "../DTOs/UpdatePlantDTO";
 
 export interface IGatewayService {
   // Auth
@@ -29,5 +32,13 @@ export interface IGatewayService {
   updateLog(token: string, id: number, data: UpdateAuditLogDTO): Promise<AuditLogDTO>;
   deleteLog(token: string, id: number): Promise<void>;
   searchLogs(token: string, query: string): Promise<AuditLogDTO[]>;
+
+  // Plants
+  getAllPlants(token: string): Promise<PlantDTO[]>;
+  getPlantById(token: string, id: number): Promise<PlantDTO>;
+  searchPlants(token: string, query: string): Promise<PlantDTO[]>;
+  createPlant(token: string, data: CreatePlantDTO): Promise<PlantDTO>;
+  updatePlant(token: string, id: number, data: UpdatePlantDTO): Promise<PlantDTO>;
+  deletePlant(token: string, id: number): Promise<void>;
 }
 

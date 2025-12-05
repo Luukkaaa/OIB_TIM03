@@ -5,16 +5,27 @@ import { CreateUserDTO } from "../../Domain/DTOs/CreateUserDTO";
 import { UpdateUserDTO } from "../../Domain/DTOs/UpdateUserDTO";
 import { validateCreateUser } from "../validators/CreateUserValidator";
 import { validateUpdateUser } from "../validators/UpdateUserValidator";
+import { AuditLogClient } from "../../Services/AuditLogClient";
+import { LogType } from "../../audit-types/LogType";
 
 export class UsersController {
   private readonly router: Router;
 
   constructor(
     private readonly usersService: IUsersService,
-    private readonly logger: ILogerService
+    private readonly logger: ILogerService,
+    private readonly auditClient: AuditLogClient
   ) {
     this.router = Router();
     this.initializeRoutes();
+  }
+
+  private async safeAuditLog(type: LogType, message: string): Promise<void> {
+    try {
+      await this.auditClient.log(type, message);
+    } catch (err) {
+      this.logger.log(`[AuditLogError] ${(err as Error).message}`);
+    }
   }
 
   private initializeRoutes(): void {
@@ -33,6 +44,7 @@ export class UsersController {
       res.status(200).json(users);
     } catch (err) {
       this.logger.log((err as Error).message);
+      await this.safeAuditLog(LogType.ERROR, `Greska pri dohvatanju svih korisnika: ${(err as Error).message}`);
       res.status(500).json({ message: (err as Error).message });
     }
   }
@@ -45,6 +57,7 @@ export class UsersController {
       res.status(200).json(user);
     } catch (err) {
       this.logger.log((err as Error).message);
+      await this.safeAuditLog(LogType.ERROR, `Greska pri dohvatanju korisnika: ${(err as Error).message}`);
       res.status(404).json({ message: (err as Error).message });
     }
   }
@@ -54,6 +67,7 @@ export class UsersController {
       const data: CreateUserDTO = req.body as CreateUserDTO;
       const validation = validateCreateUser(data);
       if (!validation.success) {
+        await this.safeAuditLog(LogType.WARNING, `Nevalidan zahtev za kreiranje korisnika: ${validation.message}`);
         res.status(400).json({ message: validation.message });
         return;
       }
@@ -62,6 +76,7 @@ export class UsersController {
       res.status(201).json(created);
     } catch (err) {
       this.logger.log((err as Error).message);
+      await this.safeAuditLog(LogType.ERROR, `Kreiranje korisnika neuspesno: ${(err as Error).message}`);
       res.status(400).json({ message: (err as Error).message });
     }
   }
@@ -72,6 +87,7 @@ export class UsersController {
       const data: UpdateUserDTO = req.body as UpdateUserDTO;
       const validation = validateUpdateUser(data);
       if (!validation.success) {
+        await this.safeAuditLog(LogType.WARNING, `Nevalidan zahtev za azuriranje korisnika ${req.params.id}: ${validation.message}`);
         res.status(400).json({ message: validation.message });
         return;
       }
@@ -80,6 +96,7 @@ export class UsersController {
       res.status(200).json(updated);
     } catch (err) {
       this.logger.log((err as Error).message);
+      await this.safeAuditLog(LogType.ERROR, `Azuriranje korisnika neuspesno: ${(err as Error).message}`);
       res.status(400).json({ message: (err as Error).message });
     }
   }
@@ -91,6 +108,7 @@ export class UsersController {
       res.status(204).send();
     } catch (err) {
       this.logger.log((err as Error).message);
+      await this.safeAuditLog(LogType.ERROR, `Brisanje korisnika neuspesno: ${(err as Error).message}`);
       res.status(404).json({ message: (err as Error).message });
     }
   }
@@ -99,6 +117,7 @@ export class UsersController {
     try {
       const query = req.params.query;
       if (!query || query.trim().length < 2) {
+        await this.safeAuditLog(LogType.WARNING, "Nevalidan query za pretragu korisnika (manje od 2 karaktera)");
         res.status(400).json({ message: "Query must be at least 2 characters long" });
         return;
       }
@@ -107,6 +126,7 @@ export class UsersController {
       res.status(200).json(users);
     } catch (err) {
       this.logger.log((err as Error).message);
+      await this.safeAuditLog(LogType.ERROR, `Pretraga korisnika neuspesna: ${(err as Error).message}`);
       res.status(500).json({ message: (err as Error).message });
     }
   }
