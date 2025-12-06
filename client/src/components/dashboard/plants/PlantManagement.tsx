@@ -122,15 +122,14 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 style={{ margin: 0 }}>Biljke</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Pregled, pretraga i upravljanje biljkama.</p>
+          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Pregled i pretraga biljaka.</p>
         </div>
-        <button className="btn btn-accent" onClick={handleCreate}>+ Nova biljka</button>
       </div>
 
       <div className="flex items-center gap-2">
         <input
           type="text"
-          placeholder="Pretraga (naziv, latinski)..."
+          placeholder="Pretraga biljaka..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -152,26 +151,25 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
       )}
 
       <div className="card" style={{ padding: 0, overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ overflow: "auto", flex: 1 }}>
+        <div style={{ overflow: "auto", flex: 1, minHeight: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
                 <th style={{ padding: "10px 12px" }}>Naziv</th>
                 <th style={{ padding: "10px 12px" }}>Latinski</th>
-                <th style={{ padding: "10px 12px" }}>Poreklo</th>
-                <th style={{ padding: "10px 12px" }}>Jacina ulja</th>
+                <th style={{ padding: "10px 12px" }}>Zemlja</th>
+                <th style={{ padding: "10px 12px" }}>Jačina</th>
                 <th style={{ padding: "10px 12px" }}>Stanje</th>
-                <th style={{ padding: "10px 12px", width: "160px" }}>Akcije</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: "14px", textAlign: "center" }}>Učitavanje...</td>
+                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Učitavanje...</td>
                 </tr>
               ) : plants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: "14px", textAlign: "center" }}>Nema biljaka za prikaz.</td>
+                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Nema biljaka za prikaz.</td>
                 </tr>
               ) : (
                 plants.map((plant) => {
@@ -190,14 +188,6 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
                           {badge.label}
                         </span>
                       </td>
-                      <td style={{ padding: "10px 12px" }}>
-                        <div className="flex items-center gap-2">
-                          <button className="btn btn-ghost" onClick={() => handleEdit(plant)} disabled={busyId === plant.id}>Izmeni</button>
-                          <button className="btn btn-ghost" onClick={() => handleDelete(plant)} disabled={busyId === plant.id}>
-                            {busyId === plant.id ? "Brisanje..." : "Obrisi"}
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   );
                 })
@@ -205,6 +195,10 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
+        Ukupno biljaka: {plants.length}
       </div>
 
       <PlantFormModal

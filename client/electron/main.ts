@@ -13,10 +13,10 @@ const preloadPath = import.meta.env.VITE_PRODUCTION
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 800,
-    minHeight: 600,
+    width: 1300,
+    height: 820,
+    minWidth: 1100,
+    minHeight: 700,
     fullscreen: false,
     frame: false,
     backgroundColor: '#202020',

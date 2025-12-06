@@ -1,6 +1,6 @@
-.auth-window {
-  width: 500px;
-  max-width: 90%;
+﻿.auth-window {
+  width: 700px;
+  max-width: 95%;
 }
 
 .auth-tabs {
@@ -21,7 +21,7 @@
 }
 
 .auth-content {
-  padding: 24px;
+  padding: 28px 32px;
 }
 
 .auth-window-content {
@@ -52,5 +52,5 @@
   color: #1976d2;
   background: transparent;
   height: auto;
-  min-width: 140px;
+  min-width: 160px;
 }

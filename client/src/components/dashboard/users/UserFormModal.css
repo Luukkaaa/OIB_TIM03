@@ -1,10 +1,16 @@
 .user-modal-window {
-  width: 520px;
-  max-width: 95%;
+  width: 560px;
+  max-width: 96%;
+  max-height: 92vh;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-modal-content {
   padding: 18px 20px;
+  flex: 1;
+  overflow: auto;
 }
 
 .user-form {
