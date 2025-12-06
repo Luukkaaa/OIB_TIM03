@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+﻿import { Request, Response, Router } from "express";
 import { IGatewayService } from "../Domain/services/IGatewayService";
 import { LoginUserDTO } from "../Domain/DTOs/LoginUserDTO";
 import { RegistrationUserDTO } from "../Domain/DTOs/RegistrationUserDTO";
@@ -10,6 +10,9 @@ import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
 import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
 import { CreatePlantDTO } from "../Domain/DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../Domain/DTOs/UpdatePlantDTO";
+import { SeedPlantDTO } from "../Domain/DTOs/SeedPlantDTO";
+import { AdjustStrengthDTO } from "../Domain/DTOs/AdjustStrengthDTO";
+import { HarvestPlantsDTO } from "../Domain/DTOs/HarvestPlantsDTO";
 import { CreatePerfumeDTO } from "../Domain/DTOs/CreatePerfumeDTO";
 import { UpdatePerfumeDTO } from "../Domain/DTOs/UpdatePerfumeDTO";
 import { CreatePackagingDTO } from "../Domain/DTOs/CreatePackagingDTO";
@@ -49,13 +52,16 @@ export class GatewayController {
     this.router.put("/logs/:id", authenticate, authorize("admin"), this.updateLog.bind(this));
     this.router.delete("/logs/:id", authenticate, authorize("admin"), this.deleteLog.bind(this));
 
-    // Plants: read svi (uključujući seller), write admin + sales_manager
+    // Plants: read svi (uključujući seller), write admin + sales_manager; proizvodnja specifične operacije
     this.router.get("/plants", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllPlants.bind(this));
     this.router.get("/plants/search/:q", authenticate, authorize("admin", "sales_manager", "seller"), this.searchPlants.bind(this));
     this.router.get("/plants/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.getPlantById.bind(this));
     this.router.post("/plants", authenticate, authorize("admin", "sales_manager"), this.createPlant.bind(this));
     this.router.put("/plants/:id", authenticate, authorize("admin", "sales_manager"), this.updatePlant.bind(this));
     this.router.delete("/plants/:id", authenticate, authorize("admin", "sales_manager"), this.deletePlant.bind(this));
+    this.router.post("/production/seed", authenticate, authorize("admin", "sales_manager", "seller"), this.seedPlant.bind(this));
+    this.router.post("/production/adjust-strength", authenticate, authorize("admin", "sales_manager", "seller"), this.adjustStrength.bind(this));
+    this.router.post("/production/harvest", authenticate, authorize("admin", "sales_manager", "seller"), this.harvestPlants.bind(this));
 
     // Perfumes: read svi (admin/sales_manager/seller), write admin + sales_manager
     this.router.get("/perfumes", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllPerfumes.bind(this));
@@ -81,7 +87,7 @@ export class GatewayController {
     this.router.put("/warehouses/:id", authenticate, authorize("admin", "sales_manager"), this.updateWarehouse.bind(this));
     this.router.delete("/warehouses/:id", authenticate, authorize("admin", "sales_manager"), this.deleteWarehouse.bind(this));
 
-    // Sales: read/write admin/sales_manager/seller (продају ради и seller)
+    // Sales: read/write admin/sales_manager/seller (prodaju radi i seller)
     this.router.get("/sales", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllSales.bind(this));
     this.router.get("/sales/search/:q", authenticate, authorize("admin", "sales_manager", "seller"), this.searchSales.bind(this));
     this.router.get("/sales/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.getSaleById.bind(this));
@@ -322,6 +328,45 @@ export class GatewayController {
       const q = req.params.q;
       const plants = await this.gatewayService.searchPlants(token, q);
       res.status(200).json(plants);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async seedPlant(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data = req.body as SeedPlantDTO;
+      const plant = await this.gatewayService.seedPlant(token, data);
+      res.status(201).json(plant);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async adjustStrength(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data = req.body as AdjustStrengthDTO;
+      const plant = await this.gatewayService.adjustPlantStrength(token, data);
+      res.status(200).json(plant);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async harvestPlants(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data = req.body as HarvestPlantsDTO;
+      const harvested = await this.gatewayService.harvestPlants(token, data);
+      res.status(200).json(harvested);
     } catch (err: any) {
       const status = err?.response?.status ?? 400;
       const message = err?.response?.data?.message ?? (err as Error).message;

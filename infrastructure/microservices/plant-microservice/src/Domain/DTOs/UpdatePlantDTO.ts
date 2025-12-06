@@ -5,5 +5,6 @@ export interface UpdatePlantDTO {
   latinName?: string;
   originCountry?: string;
   oilStrength?: number;
+  quantity?: number;
   state?: PlantState;
 }

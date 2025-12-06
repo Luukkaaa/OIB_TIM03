@@ -6,7 +6,7 @@ export class Plant {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: "varchar", length: 150, unique: true })
+  @Column({ type: "varchar", length: 150 })
   commonName!: string;
 
   @Column({ type: "varchar", length: 150 })
@@ -17,6 +17,9 @@ export class Plant {
 
   @Column({ type: "decimal", precision: 2, scale: 1 })
   oilStrength!: number;
+
+  @Column({ type: "int", default: 1 })
+  quantity!: number;
 
   @Column({ type: "enum", enum: PlantState })
   state!: PlantState;

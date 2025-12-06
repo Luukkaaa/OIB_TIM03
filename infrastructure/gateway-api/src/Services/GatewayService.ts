@@ -12,6 +12,9 @@ import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
 import { PlantDTO } from "../Domain/DTOs/PlantDTO";
 import { CreatePlantDTO } from "../Domain/DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../Domain/DTOs/UpdatePlantDTO";
+import { SeedPlantDTO } from "../Domain/DTOs/SeedPlantDTO";
+import { AdjustStrengthDTO } from "../Domain/DTOs/AdjustStrengthDTO";
+import { HarvestPlantsDTO } from "../Domain/DTOs/HarvestPlantsDTO";
 import { PerfumeDTO } from "../Domain/DTOs/PerfumeDTO";
 import { CreatePerfumeDTO } from "../Domain/DTOs/CreatePerfumeDTO";
 import { UpdatePerfumeDTO } from "../Domain/DTOs/UpdatePerfumeDTO";
@@ -235,6 +238,27 @@ export class GatewayService implements IGatewayService {
     await this.plantClient.delete(`/plants/${id}`, {
       headers: { Authorization: token },
     });
+  }
+
+  async seedPlant(token: string, data: SeedPlantDTO): Promise<PlantDTO> {
+    const response = await this.plantClient.post<{ data: PlantDTO }>("/production/seed", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async adjustPlantStrength(token: string, data: AdjustStrengthDTO): Promise<PlantDTO> {
+    const response = await this.plantClient.post<{ data: PlantDTO }>("/production/adjust-strength", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async harvestPlants(token: string, data: HarvestPlantsDTO): Promise<PlantDTO[]> {
+    const response = await this.plantClient.post<{ data: PlantDTO[] }>("/production/harvest", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
   }
 
   // Perfumes

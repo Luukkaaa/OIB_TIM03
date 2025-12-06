@@ -9,4 +9,7 @@ export interface IPlantAPI {
   createPlant(token: string, plant: CreatePlantDTO): Promise<PlantDTO>;
   updatePlant(token: string, id: number, plant: UpdatePlantDTO): Promise<PlantDTO>;
   deletePlant(token: string, id: number): Promise<void>;
+  seedPlant(token: string, data: { commonName: string; latinName: string; originCountry: string; oilStrength?: number; quantity?: number }): Promise<PlantDTO>;
+  adjustStrength(token: string, data: { plantId: number; targetPercent: number }): Promise<PlantDTO>;
+  harvestPlants(token: string, data: { commonName: string; count: number }): Promise<PlantDTO[]>;
 }

@@ -6,11 +6,17 @@ import { UpdatePerfumeDTO } from "../Domain/DTOs/UpdatePerfumeDTO";
 import { AuditLogClient } from "./AuditLogClient";
 import { LogType } from "./LogType";
 import { PerfumeType } from "../Domain/enums/PerfumeType";
+import { ProductionClient, PlantState } from "./ProductionClient";
 
 export class PerfumeService implements IPerfumeService {
-  constructor(private readonly repo: Repository<Perfume>, private readonly audit: AuditLogClient) {}
+  constructor(
+    private readonly repo: Repository<Perfume>,
+    private readonly audit: AuditLogClient,
+    private readonly production: ProductionClient
+  ) {}
 
   async create(data: CreatePerfumeDTO): Promise<Perfume> {
+    await this.ensurePlantAvailability(data.plantId);
     await this.ensureUniqueSerial(data.serialNumber);
     this.validateType(data.type);
 
@@ -103,6 +109,44 @@ export class PerfumeService implements IPerfumeService {
   private validateType(type: PerfumeType) {
     if (!Object.values(PerfumeType).includes(type)) {
       throw new Error("Nepoznat tip parfema");
+    }
+  }
+
+  /**
+   * Proverava stanje biljke; ako je nema ili je količina 0, traži sadnju nove.
+   * Ako je jačina > 4.0, sadi novu biljku i smanjuje je na procenat odstupanja (npr. 4.65 -> 65%).
+   */
+  private async ensurePlantAvailability(plantId: number): Promise<void> {
+    try {
+      const plant = await this.production.getPlantById(plantId);
+
+      // Ako nema količine ili nije posađena, posadi novu
+      if (!plant || plant.quantity === undefined || plant.quantity <= 0 || plant.state !== PlantState.PLANTED) {
+        await this.production.seedPlant({
+          commonName: plant?.commonName ?? `Auto-plant-${Date.now()}`,
+          latinName: plant?.latinName ?? "Auto gen",
+          originCountry: plant?.originCountry ?? "N/A",
+        });
+        await this.audit.log(LogType.INFO, `Automatski zasađena biljka jer nije dostupna (plantId ${plantId})`);
+        return;
+      }
+
+      // Ako je jačina prešla 4.0, zasadi novu i smanji na procenat odstupanja
+      if (plant.oilStrength > 4) {
+        const percent = Math.max(1, Math.min(500, Math.round((plant.oilStrength - 4) * 100)));
+        const seeded = await this.production.seedPlant({
+          commonName: plant.commonName,
+          latinName: plant.latinName,
+          originCountry: plant.originCountry,
+        });
+        await this.production.adjustStrength(seeded.id, percent);
+        await this.audit.log(
+          LogType.INFO,
+          `Detektovana jacina ${plant.oilStrength} (>4). Zasadjena nova biljka ${seeded.commonName} i smanjena na ${percent}%`
+        );
+      }
+    } catch (err: any) {
+      await this.audit.log(LogType.WARNING, `ensurePlantAvailability neuspeh: ${err?.message || "Nepoznata greska"}`);
     }
   }
 }

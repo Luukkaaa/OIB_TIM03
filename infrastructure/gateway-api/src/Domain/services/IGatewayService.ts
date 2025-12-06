@@ -10,6 +10,9 @@ import { UpdateAuditLogDTO } from "../DTOs/UpdateAuditLogDTO";
 import { PlantDTO } from "../DTOs/PlantDTO";
 import { CreatePlantDTO } from "../DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../DTOs/UpdatePlantDTO";
+import { SeedPlantDTO } from "../DTOs/SeedPlantDTO";
+import { AdjustStrengthDTO } from "../DTOs/AdjustStrengthDTO";
+import { HarvestPlantsDTO } from "../DTOs/HarvestPlantsDTO";
 import { PerfumeDTO } from "../DTOs/PerfumeDTO";
 import { CreatePerfumeDTO } from "../DTOs/CreatePerfumeDTO";
 import { UpdatePerfumeDTO } from "../DTOs/UpdatePerfumeDTO";
@@ -52,6 +55,9 @@ export interface IGatewayService {
   createPlant(token: string, data: CreatePlantDTO): Promise<PlantDTO>;
   updatePlant(token: string, id: number, data: UpdatePlantDTO): Promise<PlantDTO>;
   deletePlant(token: string, id: number): Promise<void>;
+  seedPlant(token: string, data: SeedPlantDTO): Promise<PlantDTO>;
+  adjustPlantStrength(token: string, data: AdjustStrengthDTO): Promise<PlantDTO>;
+  harvestPlants(token: string, data: HarvestPlantsDTO): Promise<PlantDTO[]>;
 
   // Perfumes
   getAllPerfumes(token: string): Promise<PerfumeDTO[]>;

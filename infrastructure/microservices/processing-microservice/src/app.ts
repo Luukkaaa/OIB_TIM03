@@ -12,6 +12,7 @@ import { authenticate } from "./WebAPI/middlewares/AuthMiddleware";
 import { IPerfumeService } from "./Domain/services/IPerfumeService";
 import { PerfumeService } from "./Services/PerfumeService";
 import { PerfumeController } from "./WebAPI/controllers/PerfumeController";
+import { ProductionClient } from "./Services/ProductionClient";
 
 dotenv.config({ quiet: true });
 
@@ -43,7 +44,8 @@ const perfumeRepository: Repository<Perfume> = Db.getRepository(Perfume);
 
 // Services
 const auditLogClient = new AuditLogClient();
-const perfumeService: IPerfumeService = new PerfumeService(perfumeRepository, auditLogClient);
+const productionClient = new ProductionClient();
+const perfumeService: IPerfumeService = new PerfumeService(perfumeRepository, auditLogClient, productionClient);
 
 // Controllers
 const perfumeController = new PerfumeController(perfumeService, auditLogClient);

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { UserRole } from "../../../enums/UserRole";
 import { CreateUserDTO } from "../../../models/users/CreateUserDTO";
 import { UpdateUserDTO } from "../../../models/users/UpdateUserDTO";
@@ -64,9 +64,9 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
     const container = modalRef.current;
-    const focusable = Array.from(
-      container.querySelectorAll<HTMLElement>("input, select, textarea, button")
-    ).filter((el) => !el.hasAttribute("disabled"));
+    const focusable = Array.from(container.querySelectorAll<HTMLElement>("input, select, textarea, button")).filter(
+      (el) => !el.hasAttribute("disabled")
+    );
     focusable[0]?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -100,7 +100,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
 
   const validate = (): string | null => {
     const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
-    if (!form.username || form.username.trim().length < 3) return "KorisniÄko ime mora imati najmanje 3 znaka.";
+    if (!form.username || form.username.trim().length < 3) return "Korisničko ime mora imati najmanje 3 znaka.";
     if (!form.firstName || form.firstName.trim().length < 2) return "Ime mora imati najmanje 2 znaka.";
     if (!form.lastName || form.lastName.trim().length < 2) return "Prezime mora imati najmanje 2 znaka.";
     if (!form.email || !emailRegex.test(form.email)) return "Email nije ispravan.";
@@ -152,7 +152,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
       }
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "GreÅ¡ka pri Äuvanju korisnika.");
+      setError(err?.response?.data?.message || err?.message || "Greška pri čuvanju korisnika.");
     } finally {
       setIsSubmitting(false);
     }
@@ -262,7 +262,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
                 Otkaži
               </button>
               <button type="submit" className="btn btn-accent" disabled={isSubmitting}>
-                {isSubmitting ? "ÄŒuvanje..." : mode === "create" ? "Kreiraj" : "SaÄuvaj izmene"}
+                {isSubmitting ? "Čuvanje..." : mode === "create" ? "Kreiraj" : "Sačuvaj izmene"}
               </button>
             </div>
           </form>

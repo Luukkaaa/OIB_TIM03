@@ -60,7 +60,7 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
       const data = await plantAPI.searchPlants(token, search.trim());
       setPlants(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Greska pri pretrazi biljaka.");
+      setError(err?.response?.data?.message || "Greška pri pretrazi biljaka.");
     } finally {
       setLoading(false);
     }
@@ -107,11 +107,11 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
   const badgeForState = (state: PlantState) => {
     switch (state) {
       case PlantState.PLANTED:
-        return { label: "Posađena", color: "#90caf933" };
+        return { label: "Posadjena", color: "#90caf933" };
       case PlantState.HARVESTED:
         return { label: "Ubrana", color: "#f7d44a33" };
       case PlantState.PROCESSED:
-        return { label: "Prerađena", color: "#4caf5033" };
+        return { label: "Preradjena", color: "#4caf5033" };
       default:
         return { label: state, color: "var(--win11-subtle)" };
     }

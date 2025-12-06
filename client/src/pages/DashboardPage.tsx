@@ -6,6 +6,7 @@ import { DashboardNavbar } from "../components/dashboard/navbar/Navbar";
 import { UserManagement } from "../components/dashboard/users/UserManagement";
 import { PlantManagement } from "../components/dashboard/plants/PlantManagement";
 import { SaleList } from "../components/dashboard/sales/SaleList";
+import { ProductionPanel } from "../components/dashboard/production/ProductionPanel";
 
 type DashboardPageProps = {
   userAPI: IUserAPI;
@@ -23,7 +24,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI,
     { key: "proizvodnja", label: "Proizvodnja" },
     { key: "prerada", label: "Prerada" },
     { key: "pakovanje", label: "Pakovanje" },
-    { key: "skladistenje", label: "Skladistenje" },
+    { key: "skladistenje", label: "Skladištenje" },
     { key: "prodaja", label: "Prodaja" },
     { key: "korisnici", label: "Korisnici" },
   ];
@@ -37,11 +38,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI,
       );
     }
 
-    // Početna i ostale sekcije trenutno prikazuju biljke i račune
+    if (activeTab === "proizvodnja") {
+      return <ProductionPanel plantAPI={plantAPI} />;
+    }
+
     return (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", flex: 1, minHeight: 0 }}>
-        <PlantManagement plantAPI={plantAPI} />
-        <SaleList saleAPI={saleAPI} />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", minHeight: 0, height: "100%" }}>
+          <div style={{ minHeight: 0, overflow: "auto" }}>
+            <PlantManagement plantAPI={plantAPI} />
+          </div>
+          <div style={{ minHeight: 0, overflow: "auto" }}>
+            <SaleList saleAPI={saleAPI} />
+          </div>
+        </div>
       </div>
     );
   };
