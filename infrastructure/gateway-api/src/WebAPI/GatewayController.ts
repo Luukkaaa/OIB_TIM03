@@ -10,6 +10,14 @@ import { CreateAuditLogDTO } from "../Domain/DTOs/CreateAuditLogDTO";
 import { UpdateAuditLogDTO } from "../Domain/DTOs/UpdateAuditLogDTO";
 import { CreatePlantDTO } from "../Domain/DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../Domain/DTOs/UpdatePlantDTO";
+import { CreatePerfumeDTO } from "../Domain/DTOs/CreatePerfumeDTO";
+import { UpdatePerfumeDTO } from "../Domain/DTOs/UpdatePerfumeDTO";
+import { CreatePackagingDTO } from "../Domain/DTOs/CreatePackagingDTO";
+import { UpdatePackagingDTO } from "../Domain/DTOs/UpdatePackagingDTO";
+import { CreateWarehouseDTO } from "../Domain/DTOs/CreateWarehouseDTO";
+import { UpdateWarehouseDTO } from "../Domain/DTOs/UpdateWarehouseDTO";
+import { CreateSaleDTO } from "../Domain/DTOs/CreateSaleDTO";
+import { UpdateSaleDTO } from "../Domain/DTOs/UpdateSaleDTO";
 
 export class GatewayController {
   private readonly router: Router;
@@ -48,6 +56,38 @@ export class GatewayController {
     this.router.post("/plants", authenticate, authorize("admin", "sales_manager"), this.createPlant.bind(this));
     this.router.put("/plants/:id", authenticate, authorize("admin", "sales_manager"), this.updatePlant.bind(this));
     this.router.delete("/plants/:id", authenticate, authorize("admin", "sales_manager"), this.deletePlant.bind(this));
+
+    // Perfumes: read svi (admin/sales_manager/seller), write admin + sales_manager
+    this.router.get("/perfumes", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllPerfumes.bind(this));
+    this.router.get("/perfumes/search/:q", authenticate, authorize("admin", "sales_manager", "seller"), this.searchPerfumes.bind(this));
+    this.router.get("/perfumes/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.getPerfumeById.bind(this));
+    this.router.post("/perfumes", authenticate, authorize("admin", "sales_manager"), this.createPerfume.bind(this));
+    this.router.put("/perfumes/:id", authenticate, authorize("admin", "sales_manager"), this.updatePerfume.bind(this));
+    this.router.delete("/perfumes/:id", authenticate, authorize("admin", "sales_manager"), this.deletePerfume.bind(this));
+
+    // Packaging: read admin/sales_manager/seller; write admin/sales_manager
+    this.router.get("/packagings", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllPackaging.bind(this));
+    this.router.get("/packagings/search/:q", authenticate, authorize("admin", "sales_manager", "seller"), this.searchPackaging.bind(this));
+    this.router.get("/packagings/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.getPackagingById.bind(this));
+    this.router.post("/packagings", authenticate, authorize("admin", "sales_manager"), this.createPackaging.bind(this));
+    this.router.put("/packagings/:id", authenticate, authorize("admin", "sales_manager"), this.updatePackaging.bind(this));
+    this.router.delete("/packagings/:id", authenticate, authorize("admin", "sales_manager"), this.deletePackaging.bind(this));
+
+    // Warehouses: read admin/sales_manager/seller; write admin/sales_manager
+    this.router.get("/warehouses", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllWarehouses.bind(this));
+    this.router.get("/warehouses/search/:q", authenticate, authorize("admin", "sales_manager", "seller"), this.searchWarehouses.bind(this));
+    this.router.get("/warehouses/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.getWarehouseById.bind(this));
+    this.router.post("/warehouses", authenticate, authorize("admin", "sales_manager"), this.createWarehouse.bind(this));
+    this.router.put("/warehouses/:id", authenticate, authorize("admin", "sales_manager"), this.updateWarehouse.bind(this));
+    this.router.delete("/warehouses/:id", authenticate, authorize("admin", "sales_manager"), this.deleteWarehouse.bind(this));
+
+    // Sales: read/write admin/sales_manager/seller (продају ради и seller)
+    this.router.get("/sales", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllSales.bind(this));
+    this.router.get("/sales/search/:q", authenticate, authorize("admin", "sales_manager", "seller"), this.searchSales.bind(this));
+    this.router.get("/sales/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.getSaleById.bind(this));
+    this.router.post("/sales", authenticate, authorize("admin", "sales_manager", "seller"), this.createSale.bind(this));
+    this.router.put("/sales/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.updateSale.bind(this));
+    this.router.delete("/sales/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.deleteSale.bind(this));
   }
 
   // Auth
@@ -282,6 +322,322 @@ export class GatewayController {
       const q = req.params.q;
       const plants = await this.gatewayService.searchPlants(token, q);
       res.status(200).json(plants);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  // Perfumes
+  private async getAllPerfumes(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const perfumes = await this.gatewayService.getAllPerfumes(token);
+      res.status(200).json(perfumes);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 500;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getPerfumeById(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const perfume = await this.gatewayService.getPerfumeById(token, id);
+      res.status(200).json(perfume);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async createPerfume(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data: CreatePerfumeDTO = req.body;
+      const perfume = await this.gatewayService.createPerfume(token, data);
+      res.status(201).json(perfume);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async updatePerfume(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const data: UpdatePerfumeDTO = req.body;
+      const perfume = await this.gatewayService.updatePerfume(token, id, data);
+      res.status(200).json(perfume);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async deletePerfume(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deletePerfume(token, id);
+      res.status(204).send();
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async searchPerfumes(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const q = req.params.q;
+      const perfumes = await this.gatewayService.searchPerfumes(token, q);
+      res.status(200).json(perfumes);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  // Packaging
+  private async getAllPackaging(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const items = await this.gatewayService.getAllPackaging(token);
+      res.status(200).json(items);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 500;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getPackagingById(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const item = await this.gatewayService.getPackagingById(token, id);
+      res.status(200).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async createPackaging(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data: CreatePackagingDTO = req.body;
+      const item = await this.gatewayService.createPackaging(token, data);
+      res.status(201).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async updatePackaging(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const data: UpdatePackagingDTO = req.body;
+      const item = await this.gatewayService.updatePackaging(token, id, data);
+      res.status(200).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async deletePackaging(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deletePackaging(token, id);
+      res.status(204).send();
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async searchPackaging(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const q = req.params.q;
+      const items = await this.gatewayService.searchPackaging(token, q);
+      res.status(200).json(items);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  // Warehouses
+  private async getAllWarehouses(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const items = await this.gatewayService.getAllWarehouses(token);
+      res.status(200).json(items);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 500;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getWarehouseById(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const item = await this.gatewayService.getWarehouseById(token, id);
+      res.status(200).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async createWarehouse(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data: CreateWarehouseDTO = req.body;
+      const item = await this.gatewayService.createWarehouse(token, data);
+      res.status(201).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async updateWarehouse(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const data: UpdateWarehouseDTO = req.body;
+      const item = await this.gatewayService.updateWarehouse(token, id, data);
+      res.status(200).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async deleteWarehouse(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deleteWarehouse(token, id);
+      res.status(204).send();
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async searchWarehouses(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const q = req.params.q;
+      const items = await this.gatewayService.searchWarehouses(token, q);
+      res.status(200).json(items);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  // Sales
+  private async getAllSales(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const items = await this.gatewayService.getAllSales(token);
+      res.status(200).json(items);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 500;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getSaleById(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const item = await this.gatewayService.getSaleById(token, id);
+      res.status(200).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async createSale(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data: CreateSaleDTO = req.body;
+      const item = await this.gatewayService.createSale(token, data);
+      res.status(201).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async updateSale(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const data: UpdateSaleDTO = req.body;
+      const item = await this.gatewayService.updateSale(token, id, data);
+      res.status(200).json(item);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async deleteSale(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      await this.gatewayService.deleteSale(token, id);
+      res.status(204).send();
+    } catch (err: any) {
+      const status = err?.response?.status ?? 404;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async searchSales(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const q = req.params.q;
+      const items = await this.gatewayService.searchSales(token, q);
+      res.status(200).json(items);
     } catch (err: any) {
       const status = err?.response?.status ?? 400;
       const message = err?.response?.data?.message ?? (err as Error).message;

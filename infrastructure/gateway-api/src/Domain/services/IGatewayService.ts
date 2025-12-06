@@ -10,6 +10,18 @@ import { UpdateAuditLogDTO } from "../DTOs/UpdateAuditLogDTO";
 import { PlantDTO } from "../DTOs/PlantDTO";
 import { CreatePlantDTO } from "../DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../DTOs/UpdatePlantDTO";
+import { PerfumeDTO } from "../DTOs/PerfumeDTO";
+import { CreatePerfumeDTO } from "../DTOs/CreatePerfumeDTO";
+import { UpdatePerfumeDTO } from "../DTOs/UpdatePerfumeDTO";
+import { PackagingDTO } from "../DTOs/PackagingDTO";
+import { CreatePackagingDTO } from "../DTOs/CreatePackagingDTO";
+import { UpdatePackagingDTO } from "../DTOs/UpdatePackagingDTO";
+import { WarehouseDTO } from "../DTOs/WarehouseDTO";
+import { CreateWarehouseDTO } from "../DTOs/CreateWarehouseDTO";
+import { UpdateWarehouseDTO } from "../DTOs/UpdateWarehouseDTO";
+import { SaleDTO } from "../DTOs/SaleDTO";
+import { CreateSaleDTO } from "../DTOs/CreateSaleDTO";
+import { UpdateSaleDTO } from "../DTOs/UpdateSaleDTO";
 
 export interface IGatewayService {
   // Auth
@@ -40,5 +52,37 @@ export interface IGatewayService {
   createPlant(token: string, data: CreatePlantDTO): Promise<PlantDTO>;
   updatePlant(token: string, id: number, data: UpdatePlantDTO): Promise<PlantDTO>;
   deletePlant(token: string, id: number): Promise<void>;
+
+  // Perfumes
+  getAllPerfumes(token: string): Promise<PerfumeDTO[]>;
+  getPerfumeById(token: string, id: number): Promise<PerfumeDTO>;
+  searchPerfumes(token: string, query: string): Promise<PerfumeDTO[]>;
+  createPerfume(token: string, data: CreatePerfumeDTO): Promise<PerfumeDTO>;
+  updatePerfume(token: string, id: number, data: UpdatePerfumeDTO): Promise<PerfumeDTO>;
+  deletePerfume(token: string, id: number): Promise<void>;
+
+  // Packaging
+  getAllPackaging(token: string): Promise<PackagingDTO[]>;
+  getPackagingById(token: string, id: number): Promise<PackagingDTO>;
+  searchPackaging(token: string, query: string): Promise<PackagingDTO[]>;
+  createPackaging(token: string, data: CreatePackagingDTO): Promise<PackagingDTO>;
+  updatePackaging(token: string, id: number, data: UpdatePackagingDTO): Promise<PackagingDTO>;
+  deletePackaging(token: string, id: number): Promise<void>;
+
+  // Warehouses
+  getAllWarehouses(token: string): Promise<WarehouseDTO[]>;
+  getWarehouseById(token: string, id: number): Promise<WarehouseDTO>;
+  searchWarehouses(token: string, query: string): Promise<WarehouseDTO[]>;
+  createWarehouse(token: string, data: CreateWarehouseDTO): Promise<WarehouseDTO>;
+  updateWarehouse(token: string, id: number, data: UpdateWarehouseDTO): Promise<WarehouseDTO>;
+  deleteWarehouse(token: string, id: number): Promise<void>;
+
+  // Sales
+  getAllSales(token: string): Promise<SaleDTO[]>;
+  getSaleById(token: string, id: number): Promise<SaleDTO>;
+  searchSales(token: string, query: string): Promise<SaleDTO[]>;
+  createSale(token: string, data: CreateSaleDTO): Promise<SaleDTO>;
+  updateSale(token: string, id: number, data: UpdateSaleDTO): Promise<SaleDTO>;
+  deleteSale(token: string, id: number): Promise<void>;
 }
 
