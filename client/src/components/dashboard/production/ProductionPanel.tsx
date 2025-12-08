@@ -6,19 +6,20 @@ import { useAuth } from "../../../hooks/useAuthHook";
 import { PlantState } from "../../../models/plants/PlantState";
 import { ProductionLog } from "./ProductionLog";
 
-// Keš poslednjih učitanih logova (ostaje i nakon promene taba / reload-a)
-let cachedLogs: { id: string; time: string; message: string }[] = [];
-
 type Props = {
   plantAPI: IPlantAPI;
 };
 
 type ModalType = "seed" | "harvest" | "adjust" | null;
 
+type LogEntry = { id: string; time: string; message: string };
+
+let cachedLogs: LogEntry[] = [];
+
 export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [plants, setPlants] = useState<PlantDTO[]>([]);
-  const [logs, setLogs] = useState<{ id: string; time: string; message: string }[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [logError, setLogError] = useState("");
@@ -30,6 +31,9 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
   const [adjustForm, setAdjustForm] = useState({ plantId: "", targetPercent: "" });
 
   const hasToken = useMemo(() => !!token, [token]);
+  const role = useMemo(() => (user?.role ?? "").toLowerCase(), [user]);
+  const hideLogs = role === "seller" || role === "sales_manager";
+  const totalQuantity = useMemo(() => plants.reduce((sum, p) => sum + (p.quantity ?? 0), 0), [plants]);
 
   useEffect(() => {
     if (cachedLogs.length === 0) {
@@ -42,36 +46,32 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
         }
       }
     }
-    if (cachedLogs.length > 0) {
-      setLogs(cachedLogs);
-    }
+    if (cachedLogs.length > 0) setLogs(cachedLogs);
     if (hasToken) {
-      loadPlants();
-      loadLogs(false);
+      void loadPlants();
+      void loadLogs(false);
     }
   }, [hasToken]);
 
-  // Trap tab unutar modala
+  // фокус остаје унутар модала
   useEffect(() => {
     if (!modal || !modalRef.current) return;
     const container = modalRef.current;
     const focusable = Array.from(container.querySelectorAll<HTMLElement>("input, button")).filter((el) => !el.hasAttribute("disabled"));
     focusable[0]?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      if (!focusable.length) return;
+      if (e.key !== "Tab" || !focusable.length) return;
       const active = document.activeElement as HTMLElement;
       const idx = focusable.indexOf(active);
       const lastIdx = focusable.length - 1;
       if (e.shiftKey) {
         const prev = idx <= 0 ? focusable[lastIdx] : focusable[idx - 1];
         prev.focus();
-        e.preventDefault();
       } else {
         const next = idx === lastIdx ? focusable[0] : focusable[idx + 1];
         next.focus();
-        e.preventDefault();
       }
+      e.preventDefault();
     };
     container.addEventListener("keydown", handleKeyDown);
     return () => container.removeEventListener("keydown", handleKeyDown);
@@ -86,13 +86,13 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
       const data = await plantAPI.getAllPlants(token);
       setPlants(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Neuspešno učitavanje biljaka.");
+      setError(err?.response?.data?.message || "Неуспешно учитавање биљака.");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadLogs = async (clearExisting: boolean = false) => {
+  const loadLogs = async (clearExisting = false) => {
     if (!token) return;
     setLogError("");
     if (clearExisting) {
@@ -122,7 +122,7 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
         localStorage.setItem("productionLogs", JSON.stringify(filtered));
       }
     } catch (err: any) {
-      setLogError(err?.response?.data?.message || "Neuspešno učitavanje dnevnika.");
+      setLogError(err?.response?.data?.message || "Неуспешно учитавање дневника.");
     }
   };
 
@@ -138,12 +138,12 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
         originCountry: seedForm.originCountry,
         oilStrength: oil,
       });
-      addLog(`Zasadjena biljka: ${seedForm.commonName}`);
+      addLog(`Засађена биљка: ${seedForm.commonName}`);
       await loadPlants();
       setSeedForm({ commonName: "", latinName: "", originCountry: "", oilStrength: "" });
       setModal(null);
     } catch (err: any) {
-      setModalError(err?.response?.data?.message || "Greška pri sadnji biljke.");
+      setModalError(err?.response?.data?.message || "Неуспешно сађење.");
     }
   };
 
@@ -156,12 +156,12 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
         commonName: harvestForm.commonName,
         count: Number(harvestForm.count),
       });
-      addLog(`Ubrano ${harvestForm.count} biljaka: ${harvestForm.commonName}`);
+      addLog(`Убрано ${harvestForm.count} биљака: ${harvestForm.commonName}`);
       await loadPlants();
       setHarvestForm({ commonName: "", count: "" });
       setModal(null);
     } catch (err: any) {
-      setModalError(err?.response?.data?.message || "Greška pri berbi.");
+      setModalError(err?.response?.data?.message || "Неуспешно жање.");
     }
   };
 
@@ -170,27 +170,33 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
     setError("");
     setModalError("");
     try {
+      const strength = Number(adjustForm.targetPercent);
+      if (Number.isNaN(strength) || strength < 1 || strength > 5) {
+        setModalError("Опсег мора бити између 1 и 5.");
+        return;
+      }
+
       await plantAPI.adjustStrength(token, {
         plantId: Number(adjustForm.plantId),
-        targetPercent: Number(adjustForm.targetPercent),
+        targetPercent: strength,
       });
-      addLog(`Podešena jačina biljke ID ${adjustForm.plantId} na ${adjustForm.targetPercent}`);
+      addLog(`Промењена јачина за биљку ID ${adjustForm.plantId} на ${strength}`);
       await loadPlants();
       setAdjustForm({ plantId: "", targetPercent: "" });
       setModal(null);
     } catch (err: any) {
-      setModalError(err?.response?.data?.message || "Greška pri podešavanju jačine.");
+      setModalError(err?.response?.data?.message || "Неуспешно подешавање јачине.");
     }
   };
 
   const badge = (state: PlantState) => {
     switch (state) {
       case PlantState.PLANTED:
-        return { label: "Posadjena", color: "#4caf5033" };
+        return { label: "Посађена", color: "#4caf5033" };
       case PlantState.HARVESTED:
-        return { label: "Ubrana", color: "#f7d44a33" };
+        return { label: "Убрана", color: "#f7d44a33" };
       case PlantState.PROCESSED:
-        return { label: "Preradjena", color: "#90caf933" };
+        return { label: "Прерађена", color: "#90caf933" };
       default:
         return { label: state, color: "var(--win11-subtle)" };
     }
@@ -212,13 +218,13 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
       <div className="card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", minHeight: 0 }}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 style={{ margin: 0 }}>Upravljanje biljkama</h3>
-            <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Prikaz i stanje biljaka u proizvodnji.</p>
+            <h3 style={{ margin: 0 }}>Управљање биљкама</h3>
+            <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед, претрага и управљање биљкама.</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="btn btn-accent" onClick={() => setModal("seed")}>Zasadi biljku</button>
-            <button className="btn btn-accent" onClick={() => setModal("harvest")}>Uberi biljke</button>
-            <button className="btn btn-accent" onClick={() => setModal("adjust")}>Promeni jačinu</button>
+            <button className="btn btn-accent" onClick={() => setModal("seed")}>Засади биљку</button>
+            <button className="btn btn-accent" onClick={() => setModal("harvest")}>Убери биљку</button>
+            <button className="btn btn-accent" onClick={() => setModal("adjust")}>Промени јачину</button>
           </div>
         </div>
 
@@ -233,21 +239,21 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                  <th style={{ padding: "10px 12px" }}>Naziv</th>
-                  <th style={{ padding: "10px 12px" }}>Latinski naziv</th>
-                  <th style={{ padding: "10px 12px" }}>Količina</th>
-                  <th style={{ padding: "10px 12px" }}>Jačina</th>
-                  <th style={{ padding: "10px 12px" }}>Stanje</th>
+                  <th style={{ padding: "10px 12px" }}>Назив</th>
+                  <th style={{ padding: "10px 12px" }}>Латински</th>
+                  <th style={{ padding: "10px 12px" }}>Количина</th>
+                  <th style={{ padding: "10px 12px" }}>Јачина</th>
+                  <th style={{ padding: "10px 12px" }}>Стање</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Učitavanje...</td>
+                    <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Учитавање...</td>
                   </tr>
                 ) : plants.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Nema biljaka za prikaz.</td>
+                    <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Нема биљака.</td>
                   </tr>
                 ) : (
                   plants.map((p) => {
@@ -276,13 +282,19 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", color: "var(--win11-text-secondary)", fontSize: 12 }}>
-          <span>Ukupno biljaka: {plants.length}</span>
-          <span>Ažurirano: {new Date().toLocaleDateString()}</span>
+          <span>Укупно биљака: {totalQuantity}</span>
+          <span>Датум: {new Date().toLocaleDateString()}</span>
         </div>
       </div>
 
       <div className="card" style={{ padding: 0, height: "100%", minHeight: 0 }}>
-        <ProductionLog entries={logs} onRefresh={() => loadLogs(true)} error={logError} />
+        {hideLogs ? (
+          <div style={{ padding: "12px", color: "var(--win11-text-secondary)" }}>
+            Приступ дневнику није дозвољен за ову улогу.
+          </div>
+        ) : (
+          <ProductionLog entries={logs} onRefresh={() => loadLogs(true)} error={logError} />
+        )}
       </div>
 
       {modal && (
@@ -295,9 +307,9 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
                 </svg>
               </div>
               <span className="titlebar-title">
-                {modal === "seed" && "Zasadi biljku"}
-                {modal === "harvest" && "Uberi biljke"}
-                {modal === "adjust" && "Promeni jačinu"}
+                {modal === "seed" && "Засади биљку"}
+                {modal === "harvest" && "Убери биљку"}
+                {modal === "adjust" && "Промени јачину"}
               </span>
               <div className="titlebar-controls">
                 <button className="titlebar-btn close" onClick={() => setModal(null)} aria-label="Close">
@@ -318,24 +330,24 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
               {modal === "seed" && (
                 <>
                   <div>
-                    <label>Naziv</label>
+                    <label>Назив</label>
                     <input className="auth-input" value={seedForm.commonName} onChange={(e) => setSeedForm({ ...seedForm, commonName: e.target.value })} />
                   </div>
                   <div>
-                    <label>Latinski naziv</label>
+                    <label>Латински назив</label>
                     <input className="auth-input" value={seedForm.latinName} onChange={(e) => setSeedForm({ ...seedForm, latinName: e.target.value })} />
                   </div>
                   <div>
-                    <label>Zemlja porekla</label>
+                    <label>Земља порекла</label>
                     <input className="auth-input" value={seedForm.originCountry} onChange={(e) => setSeedForm({ ...seedForm, originCountry: e.target.value })} />
                   </div>
                   <div>
-                    <label>Jačina (opciono 1-5)</label>
+                    <label>Јачина (опсег 1-5)</label>
                     <input className="auth-input" value={seedForm.oilStrength} onChange={(e) => setSeedForm({ ...seedForm, oilStrength: e.target.value })} />
                   </div>
                   <div className="flex items-center justify-end gap-2">
-                    <button className="btn btn-ghost" onClick={() => setModal(null)}>Otkaži</button>
-                    <button className="btn btn-accent" onClick={handleSeed}>Sačuvaj</button>
+                    <button className="btn btn-ghost" onClick={() => setModal(null)}>Откажи</button>
+                    <button className="btn btn-accent" onClick={handleSeed}>Сачувај</button>
                   </div>
                 </>
               )}
@@ -343,16 +355,16 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
               {modal === "harvest" && (
                 <>
                   <div>
-                    <label>Naziv biljke</label>
+                    <label>Назив биљке</label>
                     <input className="auth-input" value={harvestForm.commonName} onChange={(e) => setHarvestForm({ ...harvestForm, commonName: e.target.value })} />
                   </div>
                   <div>
-                    <label>Količina</label>
+                    <label>Количина</label>
                     <input className="auth-input" value={harvestForm.count} onChange={(e) => setHarvestForm({ ...harvestForm, count: e.target.value })} />
                   </div>
                   <div className="flex items-center justify-end gap-2">
-                    <button className="btn btn-ghost" onClick={() => setModal(null)}>Otkaži</button>
-                    <button className="btn btn-accent" onClick={handleHarvest}>Sačuvaj</button>
+                    <button className="btn btn-ghost" onClick={() => setModal(null)}>Откажи</button>
+                    <button className="btn btn-accent" onClick={handleHarvest}>Сачувај</button>
                   </div>
                 </>
               )}
@@ -360,16 +372,16 @@ export const ProductionPanel: React.FC<Props> = ({ plantAPI }) => {
               {modal === "adjust" && (
                 <>
                   <div>
-                    <label>ID biljke</label>
+                    <label>ID биљке</label>
                     <input className="auth-input" value={adjustForm.plantId} onChange={(e) => setAdjustForm({ ...adjustForm, plantId: e.target.value })} />
                   </div>
                   <div>
-                    <label>Ciljni procenat jačine</label>
+                    <label>Јачина (1-5)</label>
                     <input className="auth-input" value={adjustForm.targetPercent} onChange={(e) => setAdjustForm({ ...adjustForm, targetPercent: e.target.value })} />
                   </div>
                   <div className="flex items-center justify-end gap-2">
-                    <button className="btn btn-ghost" onClick={() => setModal(null)}>Otkaži</button>
-                    <button className="btn btn-accent" onClick={handleAdjust}>Sačuvaj</button>
+                    <button className="btn btn-ghost" onClick={() => setModal(null)}>Откажи</button>
+                    <button className="btn btn-accent" onClick={handleAdjust}>Сачувај</button>
                   </div>
                 </>
               )}

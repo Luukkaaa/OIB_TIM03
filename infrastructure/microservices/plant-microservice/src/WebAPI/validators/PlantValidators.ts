@@ -86,9 +86,8 @@ export function validateSeed(data: SeedPlantDTO): { success: boolean; message?: 
 
 export function validateAdjust(data: AdjustStrengthDTO): { success: boolean; message?: string } {
   if (!data || !data.plantId || Number.isNaN(data.plantId)) return { success: false, message: "plantId is required" };
-  if (!data.targetPercent || Number.isNaN(data.targetPercent)) return { success: false, message: "targetPercent is required" };
-  if (data.targetPercent <= 0) return { success: false, message: "targetPercent must be greater than 0" };
-  if (data.targetPercent > 500) return { success: false, message: "targetPercent must be <= 500" };
+  if (data.targetPercent === undefined || data.targetPercent === null || Number.isNaN(data.targetPercent)) return { success: false, message: "targetStrength is required" };
+  if (data.targetPercent < 1 || data.targetPercent > 5) return { success: false, message: "targetStrength must be between 1 and 5" };
   return { success: true };
 }
 
@@ -99,3 +98,5 @@ export function validateHarvest(data: HarvestPlantsDTO): { success: boolean; mes
   if (data.count > 1000) return { success: false, message: "count too large" };
   return { success: true };
 }
+
+

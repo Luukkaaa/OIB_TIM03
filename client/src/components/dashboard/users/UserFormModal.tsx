@@ -60,7 +60,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
     }
   }, [isOpen, initial]);
 
-  // Trap tab unutar modala
+  // trap таб навигације у модалу
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
     const container = modalRef.current;
@@ -100,17 +100,17 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
 
   const validate = (): string | null => {
     const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
-    if (!form.username || form.username.trim().length < 3) return "Korisničko ime mora imati najmanje 3 znaka.";
-    if (!form.firstName || form.firstName.trim().length < 2) return "Ime mora imati najmanje 2 znaka.";
-    if (!form.lastName || form.lastName.trim().length < 2) return "Prezime mora imati najmanje 2 znaka.";
-    if (!form.email || !emailRegex.test(form.email)) return "Email nije ispravan.";
+    if (!form.username || form.username.trim().length < 3) return "Корисничко име мора имати најмање 3 знака.";
+    if (!form.firstName || form.firstName.trim().length < 2) return "Име мора имати најмање 2 знака.";
+    if (!form.lastName || form.lastName.trim().length < 2) return "Презиме мора имати најмање 2 знака.";
+    if (!form.email || !emailRegex.test(form.email)) return "Имејл није исправан.";
     if (mode === "create") {
-      if (!form.password || form.password.length < 6) return "Lozinka mora imati najmanje 6 karaktera.";
-      if (form.password !== form.confirmPassword) return "Lozinke se ne poklapaju.";
+      if (!form.password || form.password.length < 6) return "Лозинка мора имати најмање 6 карактера.";
+      if (form.password !== form.confirmPassword) return "Лозинке се не поклапају.";
     }
     if (mode === "edit" && form.password) {
-      if (form.password.length < 6) return "Nova lozinka mora imati najmanje 6 karaktera.";
-      if (form.password !== form.confirmPassword) return "Lozinke se ne poklapaju.";
+      if (form.password.length < 6) return "Нова лозинка мора имати најмање 6 карактера.";
+      if (form.password !== form.confirmPassword) return "Лозинке се не поклапају.";
     }
     return null;
   };
@@ -152,7 +152,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
       }
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Greška pri čuvanju korisnika.");
+      setError(err?.response?.data?.message || err?.message || "Грешка при чувању корисника.");
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +167,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
               <path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" />
             </svg>
           </div>
-          <span className="titlebar-title">{mode === "create" ? "Novi korisnik" : "Izmena korisnika"}</span>
+          <span className="titlebar-title">{mode === "create" ? "Нови корисник" : "Измена корисника"}</span>
           <div className="titlebar-controls">
             <button className="titlebar-btn close" onClick={onClose} aria-label="Close">
               <svg width="10" height="10" viewBox="0 0 10 10">
@@ -180,36 +180,36 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
         <div className="window-content user-modal-content">
           <form onSubmit={handleSubmit} className="user-form">
             <div>
-              <label className="user-label" htmlFor="username">Username</label>
-              <input id="username" name="username" className="auth-input" value={form.username} onChange={handleChange} placeholder="Choose a username" required />
+              <label className="user-label" htmlFor="username">Корисничко име</label>
+              <input id="username" name="username" className="auth-input" value={form.username} onChange={handleChange} placeholder="Унесите корисничко име" required />
             </div>
 
             <div>
-              <label className="user-label" htmlFor="firstName">Name</label>
-              <input id="firstName" name="firstName" className="auth-input" value={form.firstName} onChange={handleChange} placeholder="Choose a name" required />
+              <label className="user-label" htmlFor="firstName">Име</label>
+              <input id="firstName" name="firstName" className="auth-input" value={form.firstName} onChange={handleChange} placeholder="Унесите име" required />
             </div>
 
             <div>
-              <label className="user-label" htmlFor="lastName">Last Name</label>
-              <input id="lastName" name="lastName" className="auth-input" value={form.lastName} onChange={handleChange} placeholder="Choose a last name" required />
+              <label className="user-label" htmlFor="lastName">Презиме</label>
+              <input id="lastName" name="lastName" className="auth-input" value={form.lastName} onChange={handleChange} placeholder="Унесите презиме" required />
             </div>
 
             <div>
-              <label className="user-label" htmlFor="email">Email</label>
-              <input id="email" name="email" className="auth-input" type="email" value={form.email} onChange={handleChange} placeholder="your.email@example.com" required />
+              <label className="user-label" htmlFor="email">Имејл</label>
+              <input id="email" name="email" className="auth-input" type="email" value={form.email} onChange={handleChange} placeholder="vas.email@example.com" required />
             </div>
 
             <div>
-              <label className="user-label" htmlFor="role">Role</label>
+              <label className="user-label" htmlFor="role">Улога</label>
               <select id="role" name="role" className="auth-input" value={form.role} onChange={handleChange}>
-                <option value={UserRole.ADMIN}>Admin</option>
-                <option value={UserRole.SALES_MANAGER}>Sales Manager</option>
-                <option value={UserRole.SELLER}>Seller</option>
+                <option value={UserRole.ADMIN}>Админ</option>
+                <option value={UserRole.SALES_MANAGER}>Менаџер продаје</option>
+                <option value={UserRole.SELLER}>Продавац</option>
               </select>
             </div>
 
             <div>
-              <label className="user-label" htmlFor="password">{mode === "create" ? "Password" : "Password (optional)"}</label>
+              <label className="user-label" htmlFor="password">{mode === "create" ? "Лозинка" : "Лозинка (опционо)"}</label>
               <input
                 id="password"
                 name="password"
@@ -217,12 +217,12 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
                 type="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder="Create a password (min 6 characters)"
+                placeholder="Креирајте лозинку (мин 6 карактера)"
               />
             </div>
 
             <div>
-              <label className="user-label" htmlFor="confirmPassword">Confirm Password</label>
+              <label className="user-label" htmlFor="confirmPassword">Потврдите лозинку</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -230,19 +230,19 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
                 type="password"
                 value={form.confirmPassword}
                 onChange={handleChange}
-                placeholder="Re-enter your password"
+                placeholder="Поново унесите лозинку"
               />
             </div>
 
             <div>
-              <label className="user-label" htmlFor="profileImage">Profile Image URL (Optional)</label>
+              <label className="user-label" htmlFor="profileImage">URL слике профила (опционо)</label>
               <input
                 id="profileImage"
                 name="profileImage"
                 className="auth-input"
                 value={form.profileImage}
                 onChange={handleChange}
-                placeholder="https://example.com/avatar.jpg"
+                placeholder="https://primer.com/avatar.jpg"
               />
             </div>
 
@@ -259,10 +259,10 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
 
             <div className="flex items-center justify-end gap-2 user-footer">
               <button type="button" className="btn btn-ghost" onClick={onClose} disabled={isSubmitting}>
-                Otkaži
+                Откажи
               </button>
               <button type="submit" className="btn btn-accent" disabled={isSubmitting}>
-                {isSubmitting ? "Čuvanje..." : mode === "create" ? "Kreiraj" : "Sačuvaj izmene"}
+                {isSubmitting ? "Чување..." : mode === "create" ? "Креирај" : "Сачувај измене"}
               </button>
             </div>
           </form>

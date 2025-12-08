@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ISaleAPI } from "../../../api/sales/ISaleAPI";
 import { SaleDTO } from "../../../models/sales/SaleDTO";
 import { useAuth } from "../../../hooks/useAuthHook";
@@ -12,9 +12,9 @@ type Props = {
 const badge = (type: SaleType) => {
   switch (type) {
     case SaleType.MALOPRODAJA:
-      return { label: "Maloprodaja", color: "#4caf5033" };
+      return { label: "Малопродаја", color: "#4caf5033" };
     case SaleType.VELEPRODAJA:
-      return { label: "Veleprodaja", color: "#f7d44a33" };
+      return { label: "Велепродаја", color: "#f7d44a33" };
     default:
       return { label: type, color: "var(--win11-subtle)" };
   }
@@ -23,11 +23,12 @@ const badge = (type: SaleType) => {
 const paymentLabel = (p: PaymentMethod) => {
   switch (p) {
     case PaymentMethod.GOTOVINA:
-      return "Gotovina";
+      return "Готовина";
     case PaymentMethod.UPLATA_NA_RACUN:
-      return "Uplata na račun";
+      return "Уплата на рачун";
+    case PaymentMethod.КАРТИЦА:
     case PaymentMethod.KARTICA:
-      return "Kartica";
+      return "Картица";
     default:
       return p;
   }
@@ -43,7 +44,7 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
   const hasToken = useMemo(() => !!token, [token]);
 
   useEffect(() => {
-    if (hasToken) loadSales();
+    if (hasToken) void loadSales();
   }, [hasToken]);
 
   const loadSales = async () => {
@@ -54,7 +55,7 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
       const data = await saleAPI.getAllSales(token);
       setSales(data);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Neuspešno učitavanje prodaja. Proveri da je sales servis pokrenut.";
+      const msg = err?.response?.data?.message || "Неуспешно учитавање продаја. Проверите да је sales сервис покренут.";
       setError(msg);
       setSales([]);
     } finally {
@@ -69,7 +70,7 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
       return;
     }
     if (search.trim().length < 2) {
-      setError("Unesite najmanje 2 znaka za pretragu.");
+      setError("Унесите најмање 2 знака за претрагу.");
       return;
     }
     setError("");
@@ -78,7 +79,7 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
       const data = await saleAPI.searchSales(token, search.trim());
       setSales(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Greška pri pretrazi prodaja.");
+      setError(err?.response?.data?.message || "Грешка при претрази продаја.");
     } finally {
       setLoading(false);
     }
@@ -88,25 +89,25 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
     <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 style={{ margin: 0 }}>Fiskalni računi</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Pregled i pretraga računa.</p>
+          <h3 style={{ margin: 0 }}>Фискални рачуни</h3>
+          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед и претрага рачуна.</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <input
           type="text"
-          placeholder="Pretraga računa..."
+          placeholder="Претрага рачуна..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           style={{ flex: 1 }}
         />
         <button className="btn btn-ghost" onClick={handleSearch}>
-          Pretraži
+          Претражи
         </button>
         <button className="btn btn-ghost" onClick={loadSales}>
-          Osveži
+          Освежи
         </button>
       </div>
 
@@ -123,24 +124,24 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px" }}>Broj računa</th>
-                <th style={{ padding: "10px 12px" }}>Tip prodaje</th>
-                <th style={{ padding: "10px 12px" }}>Način plaćanja</th>
-                <th style={{ padding: "10px 12px" }}>Iznos (RSD)</th>
-                <th style={{ padding: "10px 12px" }}>Datum</th>
+                <th style={{ padding: "10px 12px" }}>Број рачуна</th>
+                <th style={{ padding: "10px 12px" }}>Тип продаје</th>
+                <th style={{ padding: "10px 12px" }}>Начин плаћања</th>
+                <th style={{ padding: "10px 12px" }}>Износ (RSD)</th>
+                <th style={{ padding: "10px 12px" }}>Датум</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>
-                    Učitavanje...
+                    Учитавање...
                   </td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
                   <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>
-                    Nema fiskalnih računa.
+                    Нема фискалних рачуна.
                   </td>
                 </tr>
               ) : (
@@ -169,7 +170,7 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
         </div>
       </div>
       <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
-        Ukupno računa: {sales.length}
+        Укупно рачуна: {sales.length}
       </div>
     </div>
   );

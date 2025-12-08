@@ -303,6 +303,24 @@ export class GatewayService implements IGatewayService {
     });
   }
 
+  async startProcessing(
+    token: string,
+    data: {
+      perfumeName: string;
+      perfumeType: string;
+      bottleVolumeMl: number;
+      bottleCount: number;
+      plantId: number;
+      expirationDate: string;
+      serialPrefix?: string;
+    }
+  ): Promise<PerfumeDTO[]> {
+    const response = await this.processingClient.post<{ data: PerfumeDTO[] }>("/processing/start", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
   // Packaging
   async getAllPackaging(token: string): Promise<PackagingDTO[]> {
     const response = await this.packagingClient.get<{ data: PackagingDTO[] }>("/packagings", {

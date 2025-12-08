@@ -7,6 +7,7 @@ import { AuditLogClient } from "./AuditLogClient";
 import { LogType } from "./LogType";
 import { PerfumeType } from "../Domain/enums/PerfumeType";
 import { ProductionClient, PlantState } from "./ProductionClient";
+import { ProcessRequestDTO } from "../Domain/DTOs/ProcessRequestDTO";
 
 export class PerfumeService implements IPerfumeService {
   constructor(
@@ -113,36 +114,85 @@ export class PerfumeService implements IPerfumeService {
   }
 
   /**
-   * Proverava stanje biljke; ako je nema ili je količina 0, traži sadnju nove.
-   * Ako je jačina > 4.0, sadi novu biljku i smanjuje je na procenat odstupanja (npr. 4.65 -> 65%).
+   * Pokrece preradu: racuna potrebne biljke, zahteva berbu/sadnju, kreira bocice parfema.
+   * Formula: jedna biljka daje 50 ml parfema.
+   */
+  async process(req: ProcessRequestDTO): Promise<Perfume[]> {
+    const neededPlants = Math.ceil((req.bottleCount * req.bottleVolumeMl) / 50);
+    const plant = await this.production.getPlantById(req.plantId);
+    if (!plant || !plant.commonName) throw new Error("Plant not found");
+
+    // osiguraj dostupnost biljaka; ako nema dovoljno quantity, probaj da zasadi pa da beres
+    if (!plant.quantity || plant.quantity < neededPlants) {
+      const deficit = neededPlants - (plant.quantity ?? 0);
+      await this.production.seedPlant({
+        commonName: plant.commonName,
+        latinName: plant.latinName,
+        originCountry: plant.originCountry,
+        quantity: deficit,
+      });
+      await this.audit.log(LogType.INFO, `Automatski zasadjeno ${deficit} biljaka (${plant.commonName}) za preradu`);
+    }
+
+    // berba potrebnog broja biljaka
+    await this.production.harvest(plant.commonName, neededPlants);
+
+    // kreiranje parfema sa serijskim brojem
+    const prefix = req.serialPrefix ?? "PP-2025";
+    const createdPerfumes: Perfume[] = [];
+    const baseName = req.perfumeName.trim();
+    for (let i = 0; i < req.bottleCount; i++) {
+      const serialNumber = `${prefix}-${Date.now()}-${i + 1}`;
+      await this.ensureUniqueSerial(serialNumber);
+      const perfume = this.repo.create({
+        name: baseName,
+        type: req.perfumeType,
+        netQuantityMl: req.bottleVolumeMl,
+        serialNumber,
+        expirationDate: new Date(req.expirationDate),
+        plantId: req.plantId,
+      });
+      createdPerfumes.push(await this.repo.save(perfume));
+    }
+
+    await this.audit.log(
+      LogType.INFO,
+      `Prerada zavrsena: ${req.bottleCount} bocica (${req.perfumeName}), potreba biljaka: ${neededPlants}`
+    );
+    return createdPerfumes;
+  }
+
+  /**
+   * Proverava stanje biljke; ako je nema ili je kolicina 0, trazi sadnju nove.
+   * Ako je jacina > 4.0, sadi novu biljku i smanjuje je na balansiranu vrednost (≈65% trenutne).
    */
   private async ensurePlantAvailability(plantId: number): Promise<void> {
     try {
       const plant = await this.production.getPlantById(plantId);
 
-      // Ako nema količine ili nije posađena, posadi novu
+      // Ako nema kolicine ili nije posadena, posadi novu
       if (!plant || plant.quantity === undefined || plant.quantity <= 0 || plant.state !== PlantState.PLANTED) {
         await this.production.seedPlant({
           commonName: plant?.commonName ?? `Auto-plant-${Date.now()}`,
           latinName: plant?.latinName ?? "Auto gen",
           originCountry: plant?.originCountry ?? "N/A",
         });
-        await this.audit.log(LogType.INFO, `Automatski zasađena biljka jer nije dostupna (plantId ${plantId})`);
+        await this.audit.log(LogType.INFO, `Automatski zasadjena biljka jer nije dostupna (plantId ${plantId})`);
         return;
       }
 
-      // Ako je jačina prešla 4.0, zasadi novu i smanji na procenat odstupanja
+      // Ako je jacina presla 4.0, zasadi novu i smanji direktno na balansiranu vrednost
       if (plant.oilStrength > 4) {
-        const percent = Math.max(1, Math.min(500, Math.round((plant.oilStrength - 4) * 100)));
+        const targetStrength = Math.max(1, Math.min(5, Number((plant.oilStrength * 0.65).toFixed(1))));
         const seeded = await this.production.seedPlant({
           commonName: plant.commonName,
           latinName: plant.latinName,
           originCountry: plant.originCountry,
         });
-        await this.production.adjustStrength(seeded.id, percent);
+        await this.production.adjustStrength(seeded.id, targetStrength);
         await this.audit.log(
           LogType.INFO,
-          `Detektovana jacina ${plant.oilStrength} (>4). Zasadjena nova biljka ${seeded.commonName} i smanjena na ${percent}%`
+          `Detektovana jacina ${plant.oilStrength} (>4). Zasadjena nova biljka ${seeded.commonName} i smanjena na ${targetStrength}`
         );
       }
     } catch (err: any) {

@@ -66,6 +66,18 @@ export interface IGatewayService {
   createPerfume(token: string, data: CreatePerfumeDTO): Promise<PerfumeDTO>;
   updatePerfume(token: string, id: number, data: UpdatePerfumeDTO): Promise<PerfumeDTO>;
   deletePerfume(token: string, id: number): Promise<void>;
+  startProcessing(
+    token: string,
+    data: {
+      perfumeName: string;
+      perfumeType: string;
+      bottleVolumeMl: number;
+      bottleCount: number;
+      plantId: number;
+      expirationDate: string;
+      serialPrefix?: string;
+    }
+  ): Promise<PerfumeDTO[]>;
 
   // Packaging
   getAllPackaging(token: string): Promise<PackagingDTO[]>;

@@ -12,6 +12,7 @@ import { PackagingController } from "./WebAPI/controllers/PackagingController";
 import { AuditLogClient } from "./Services/AuditLogClient";
 import { requireServiceKey } from "./WebAPI/middlewares/ServiceAuthMiddleware";
 import { authenticate } from "./WebAPI/middlewares/AuthMiddleware";
+import { ProcessingClient } from "./Services/ProcessingClient";
 
 dotenv.config({ quiet: true });
 
@@ -43,7 +44,8 @@ const packagingRepository: Repository<Packaging> = Db.getRepository(Packaging);
 
 // Services
 const auditLogClient = new AuditLogClient();
-const packagingService: IPackagingService = new PackagingService(packagingRepository, auditLogClient);
+const processingClient = new ProcessingClient();
+const packagingService: IPackagingService = new PackagingService(packagingRepository, auditLogClient, processingClient);
 
 // Controllers
 const packagingController = new PackagingController(packagingService, auditLogClient);

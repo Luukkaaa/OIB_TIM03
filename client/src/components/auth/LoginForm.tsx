@@ -38,10 +38,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
         login(response.token);
         navigate("/dashboard");
       } else {
-        setError(response.message || "Login failed. Please try again.");
+        setError(response.message || "Пријава није успела. Покушајте поново.");
       }
     } catch (err: any) {
-      setError(err || "An error occurred. Please try again.");
+      setError(err || "Догодила се грешка. Покушајте поново.");
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +56,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
         <label htmlFor="username" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Username
+          Корисничко име
         </label>
         <input
           type="text"
@@ -64,7 +64,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
           name="username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Enter your username"
+          placeholder="Унесите корисничко име"
           required
           disabled={isLoading}
         />
@@ -72,7 +72,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="password" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Password
+          Лозинка
         </label>
         <input
           type="password"
@@ -80,7 +80,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="Enter your password"
+          placeholder="Унесите лозинку"
           required
           disabled={isLoading}
         />
@@ -113,10 +113,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
-            <span>Logging in...</span>
+            <span>Пријављивање...</span>
           </div>
         ) : (
-          "Login"
+          "Пријави се"
         )}
       </button>
     </form>

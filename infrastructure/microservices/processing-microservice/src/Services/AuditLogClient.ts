@@ -10,6 +10,7 @@ export class AuditLogClient {
     const baseURL = process.env.AUDIT_SERVICE_API || "http://localhost:6000/api/v1";
     const secret = process.env.JWT_SECRET || "";
     const serviceKey = process.env.SERVICE_API_KEY || "";
+    const presetToken = process.env.AUDIT_SERVICE_TOKEN;
 
     this.client = axios.create({
       baseURL,
@@ -17,9 +18,9 @@ export class AuditLogClient {
       timeout: 3000,
     });
 
-    this.serviceToken = secret
-      ? jwt.sign({ id: 0, username: "plant-service", role: "admin" }, secret, { expiresIn: "1h" })
-      : "";
+    this.serviceToken =
+      presetToken ||
+      (secret ? jwt.sign({ id: 0, username: "processing-service", role: "admin" }, secret, { expiresIn: "1h" }) : "");
   }
 
   async log(type: LogType, description: string): Promise<void> {

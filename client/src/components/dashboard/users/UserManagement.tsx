@@ -25,7 +25,7 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
 
   useEffect(() => {
     if (hasToken) {
-      loadUsers();
+      void loadUsers();
     }
   }, [hasToken]);
 
@@ -37,7 +37,7 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
       const data = await userAPI.getAllUsers(token);
       setUsers(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Neuspešno učitavanje korisnika.");
+      setError(err?.response?.data?.message || "Неуспешно учитавање корисника.");
     } finally {
       setLoading(false);
     }
@@ -46,11 +46,11 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
   const handleSearch = async () => {
     if (!token) return;
     if (!search.trim()) {
-      loadUsers();
+      void loadUsers();
       return;
     }
     if (search.trim().length < 2) {
-      setError("Unesite najmanje 2 znaka za pretragu.");
+      setError("Унесите најмање 2 знака за претрагу.");
       return;
     }
     setError("");
@@ -59,7 +59,7 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
       const data = await userAPI.searchUsers(token, search.trim());
       setUsers(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Greška pri pretrazi korisnika.");
+      setError(err?.response?.data?.message || "Грешка при претрази корисника.");
     } finally {
       setLoading(false);
     }
@@ -79,21 +79,21 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
 
   const handleDelete = async (user: UserDTO) => {
     if (!token) return;
-    const confirm = window.confirm(`Obrisati korisnika ${user.username}?`);
-    if (!confirm) return;
+    const confirmDelete = window.confirm(`Обрисати корисника ${user.username}?`);
+    if (!confirmDelete) return;
     setBusyId(user.id);
     try {
       await userAPI.deleteUser(token, user.id);
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Greška pri brisanju korisnika.");
+      setError(err?.response?.data?.message || "Грешка при брисању корисника.");
     } finally {
       setBusyId(null);
     }
   };
 
   const handleSubmit = async (payload: CreateUserDTO | UpdateUserDTO) => {
-    if (!token) throw new Error("Nedostaje token.");
+    if (!token) throw new Error("Недостаје токен.");
     if (modalMode === "create") {
       const created = await userAPI.createUser(token, payload as CreateUserDTO);
       setUsers((prev) => [created, ...prev]);
@@ -111,9 +111,9 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
 
   const badgeForRole = (role: string) => {
     const r = role?.toUpperCase();
-    if (r === "ADMIN") return { label: "Admin", bg: "#d32f2f33" };
-    if (r === "SALES_MANAGER") return { label: "Sales manager", bg: "#1976d233" };
-    if (r === "SELLER") return { label: "Seller", bg: "#388e3c33" };
+    if (r === "ADMIN") return { label: "Админ", bg: "#d32f2f33" };
+    if (r === "SALES_MANAGER") return { label: "Менаџер продаје", bg: "#1976d233" };
+    if (r === "SELLER") return { label: "Продавац", bg: "#388e3c33" };
     return { label: role, bg: "var(--win11-subtle)" };
   };
 
@@ -121,23 +121,23 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
     <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 style={{ margin: 0 }}>Korisnici</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Pregled, pretraga i upravljanje nalozima.</p>
+          <h3 style={{ margin: 0 }}>Корисници</h3>
+          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед, претрага и управљање налозима.</p>
         </div>
-        <button className="btn btn-accent" onClick={handleCreate}>+ Novi korisnik</button>
+        <button className="btn btn-accent" onClick={handleCreate}>+ Нови корисник</button>
       </div>
 
       <div className="flex items-center gap-2">
         <input
           type="text"
-          placeholder="Pretraga (ime, email, username)..."
+          placeholder="Претрага (име, имејл, корисничко име)..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           style={{ flex: 1 }}
         />
-        <button className="btn btn-ghost" onClick={handleSearch}>Pretraži</button>
-        <button className="btn btn-ghost" onClick={loadUsers}>Osveži</button>
+        <button className="btn btn-ghost" onClick={handleSearch}>Претражи</button>
+        <button className="btn btn-ghost" onClick={loadUsers}>Освежи</button>
       </div>
 
       {error && (
@@ -156,21 +156,21 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px" }}>Korisnik</th>
-                <th style={{ padding: "10px 12px" }}>Ime i prezime</th>
-                <th style={{ padding: "10px 12px" }}>Email</th>
-                <th style={{ padding: "10px 12px" }}>Uloga</th>
-                <th style={{ padding: "10px 12px", width: "160px" }}>Akcije</th>
+                <th style={{ padding: "10px 12px" }}>Корисник</th>
+                <th style={{ padding: "10px 12px" }}>Име и презиме</th>
+                <th style={{ padding: "10px 12px" }}>Имејл</th>
+                <th style={{ padding: "10px 12px" }}>Улога</th>
+                <th style={{ padding: "10px 12px", width: "160px" }}>Акције</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Učitavanje...</td>
+                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Учитавање...</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Nema korisnika za prikaz.</td>
+                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Нема корисника за приказ.</td>
                 </tr>
               ) : (
                 users.map((user) => (
@@ -183,8 +183,8 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
                       </div>
                     </td>
                     <td style={{ padding: "10px 12px" }}>{user.firstName} {user.lastName}</td>
-                  <td style={{ padding: "10px 12px" }}>{user.email}</td>
-                  <td style={{ padding: "10px 12px" }}>
+                    <td style={{ padding: "10px 12px" }}>{user.email}</td>
+                    <td style={{ padding: "10px 12px" }}>
                       {(() => {
                         const badge = badgeForRole(user.role);
                         return (
@@ -204,9 +204,9 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
                     </td>
                     <td style={{ padding: "10px 12px" }}>
                       <div className="flex items-center gap-2">
-                        <button className="btn btn-ghost" onClick={() => handleEdit(user)} disabled={busyId === user.id}>Izmeni</button>
+                        <button className="btn btn-ghost" onClick={() => handleEdit(user)} disabled={busyId === user.id}>Измени</button>
                         <button className="btn btn-ghost" onClick={() => handleDelete(user)} disabled={busyId === user.id}>
-                          {busyId === user.id ? "Brisanje..." : "Obriši"}
+                          {busyId === user.id ? "Брисање..." : "Обриши"}
                         </button>
                       </div>
                     </td>
@@ -216,6 +216,10 @@ export const UserManagement: React.FC<Props> = ({ userAPI }) => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
+        Укупно корисника: {users.length}
       </div>
 
       <UserFormModal

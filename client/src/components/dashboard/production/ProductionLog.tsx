@@ -27,12 +27,12 @@ export const ProductionLog: React.FC<Props> = ({ entries, onRefresh, error }) =>
         }}
       >
         <div>
-          <h3 style={{ margin: 0 }}>Dnevnik proizvodnje</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Poslednje radnje i beleške.</p>
+          <h3 style={{ margin: 0 }}>Дневник производње</h3>
+          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Бележи све акције у производњи.</p>
         </div>
         {onRefresh && (
           <button className="btn btn-ghost" onClick={onRefresh} style={{ padding: "6px 10px" }}>
-            Osveži
+            Освежи
           </button>
         )}
       </div>
@@ -45,7 +45,7 @@ export const ProductionLog: React.FC<Props> = ({ entries, onRefresh, error }) =>
 
       <div style={{ flex: 1, overflow: "auto" }}>
         {entries.length === 0 ? (
-          <div style={{ padding: "12px", color: "var(--win11-text-secondary)" }}>Nema zabeleženih događaja.</div>
+          <div style={{ padding: "12px", color: "var(--win11-text-secondary)" }}>Нема забележених акција. Освежи.</div>
         ) : (
           entries.map((entry) => (
             <div key={entry.id} style={{ borderBottom: "1px solid var(--win11-divider)", padding: "10px 12px" }}>
@@ -57,7 +57,7 @@ export const ProductionLog: React.FC<Props> = ({ entries, onRefresh, error }) =>
       </div>
 
       <div style={{ padding: "10px 12px", borderTop: "1px solid var(--win11-divider)", color: "var(--win11-text-secondary)", fontSize: 12 }}>
-        Ukupno zapisa: {entries.length}
+        Укупно акција: {entries.length}
       </div>
     </div>
   );

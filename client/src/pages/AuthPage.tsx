@@ -53,7 +53,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ authAPI }) => {
           <div className="titlebar-icon">
             <img className="auth-titlebar-img" src="/icon.png" width="20" height="20" alt="logo" title="logo" />
           </div>
-          <span className="titlebar-title">Authentication</span>
+          <span className="titlebar-title">Аутентификација</span>
         </div>
 
         <div className="window-content auth-window-content">
@@ -63,13 +63,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ authAPI }) => {
               className={`auth-tab ${activeTab === "login" ? "btn-accent active" : "btn-ghost"}`}
               onClick={() => setActiveTab("login")}
             >
-              Login
+              Пријава
             </button>
             <button
               className={`auth-tab ${activeTab === "register" ? "btn-accent active" : "btn-ghost"}`}
               onClick={() => setActiveTab("register")}
             >
-              Register
+              Регистрација
             </button>
           </div>
 
@@ -79,9 +79,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ authAPI }) => {
               <>
                 <LoginForm authAPI={authAPI} />
                 <div className="auth-register-hint">
-                  <span><strong>Nemate nalog?</strong></span>
+                  <span><strong>Немате налог?</strong></span>
                   <button className="btn auth-register-button" type="button" onClick={() => setActiveTab("register")}>
-                    Registrujte se
+                    Региструјте се
                   </button>
                 </div>
               </>

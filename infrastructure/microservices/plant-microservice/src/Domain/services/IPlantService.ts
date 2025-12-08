@@ -1,4 +1,4 @@
-import { CreatePlantDTO } from "../DTOs/CreatePlantDTO";
+﻿import { CreatePlantDTO } from "../DTOs/CreatePlantDTO";
 import { UpdatePlantDTO } from "../DTOs/UpdatePlantDTO";
 import { Plant } from "../models/Plant";
 
@@ -13,3 +13,4 @@ export interface IPlantService {
   adjustOilStrength(plantId: number, targetPercent: number): Promise<Plant>;
   harvest(commonName: string, count: number): Promise<Plant[]>;
 }
+

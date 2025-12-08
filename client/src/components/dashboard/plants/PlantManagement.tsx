@@ -2,9 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { IPlantAPI } from "../../../api/plants/IPlantAPI";
 import { PlantDTO } from "../../../models/plants/PlantDTO";
 import { useAuth } from "../../../hooks/useAuthHook";
-import { PlantFormModal } from "./PlantFormModal";
-import { CreatePlantDTO } from "../../../models/plants/CreatePlantDTO";
-import { UpdatePlantDTO } from "../../../models/plants/UpdatePlantDTO";
 import { PlantState } from "../../../models/plants/PlantState";
 
 type Props = {
@@ -14,20 +11,14 @@ type Props = {
 export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
   const { token } = useAuth();
   const [plants, setPlants] = useState<PlantDTO[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selected, setSelected] = useState<PlantDTO | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   const hasToken = useMemo(() => !!token, [token]);
 
   useEffect(() => {
-    if (hasToken) {
-      loadPlants();
-    }
+    if (hasToken) void loadPlants();
   }, [hasToken]);
 
   const loadPlants = async () => {
@@ -66,52 +57,14 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
     }
   };
 
-  const handleCreate = () => {
-    setModalMode("create");
-    setSelected(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (plant: PlantDTO) => {
-    setModalMode("edit");
-    setSelected(plant);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (plant: PlantDTO) => {
-    if (!token) return;
-    const confirmDelete = window.confirm(`Obrisati biljku ${plant.commonName}?`);
-    if (!confirmDelete) return;
-    setBusyId(plant.id);
-    try {
-      await plantAPI.deletePlant(token, plant.id);
-      setPlants((prev) => prev.filter((p) => p.id !== plant.id));
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Greška pri brisanju biljke.");
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const handleSubmit = async (payload: CreatePlantDTO | UpdatePlantDTO) => {
-    if (!token) throw new Error("Nedostaje token.");
-    if (modalMode === "create") {
-      const created = await plantAPI.createPlant(token, payload as CreatePlantDTO);
-      setPlants((prev) => [created, ...prev]);
-    } else if (selected) {
-      const updated = await plantAPI.updatePlant(token, selected.id, payload as UpdatePlantDTO);
-      setPlants((prev) => prev.map((p) => (p.id === selected.id ? updated : p)));
-    }
-  };
-
   const badgeForState = (state: PlantState) => {
     switch (state) {
       case PlantState.PLANTED:
-        return { label: "Posadjena", color: "#90caf933" };
+        return { label: "Посађена", color: "#90caf933" };
       case PlantState.HARVESTED:
-        return { label: "Ubrana", color: "#f7d44a33" };
+        return { label: "Убрана", color: "#f7d44a33" };
       case PlantState.PROCESSED:
-        return { label: "Preradjena", color: "#4caf5033" };
+        return { label: "Прерађена", color: "#4caf5033" };
       default:
         return { label: state, color: "var(--win11-subtle)" };
     }
@@ -121,22 +74,22 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
     <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 style={{ margin: 0 }}>Biljke</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Pregled i pretraga biljaka.</p>
+          <h3 style={{ margin: 0 }}>Биљке</h3>
+          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед и претрага биљака.</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <input
           type="text"
-          placeholder="Pretraga biljaka..."
+          placeholder="Претрага биљака..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           style={{ flex: 1 }}
         />
-        <button className="btn btn-ghost" onClick={handleSearch}>Pretraži</button>
-        <button className="btn btn-ghost" onClick={loadPlants}>Osveži</button>
+        <button className="btn btn-ghost" onClick={handleSearch}>Претражи</button>
+        <button className="btn btn-ghost" onClick={loadPlants}>Освежи</button>
       </div>
 
       {error && (
@@ -155,21 +108,21 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px" }}>Naziv</th>
-                <th style={{ padding: "10px 12px" }}>Latinski</th>
-                <th style={{ padding: "10px 12px" }}>Zemlja</th>
-                <th style={{ padding: "10px 12px" }}>Jačina</th>
-                <th style={{ padding: "10px 12px" }}>Stanje</th>
+                <th style={{ padding: "10px 12px" }}>Назив</th>
+                <th style={{ padding: "10px 12px" }}>Латински</th>
+                <th style={{ padding: "10px 12px" }}>Земља</th>
+                <th style={{ padding: "10px 12px" }}>Јачина</th>
+                <th style={{ padding: "10px 12px" }}>Стање</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Učitavanje...</td>
+                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Учитавање...</td>
                 </tr>
               ) : plants.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Nema biljaka za prikaz.</td>
+                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Нема биљака за приказ.</td>
                 </tr>
               ) : (
                 plants.map((plant) => {
@@ -198,16 +151,8 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
       </div>
 
       <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
-        Ukupno biljaka: {plants.length}
+        Укупно биљака: {plants.length}
       </div>
-
-      <PlantFormModal
-        isOpen={isModalOpen}
-        mode={modalMode}
-        initial={selected}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleSubmit}
-      />
     </div>
   );
 };

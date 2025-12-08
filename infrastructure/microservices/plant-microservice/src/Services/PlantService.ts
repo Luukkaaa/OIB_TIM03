@@ -146,18 +146,15 @@ export class PlantService implements IPlantService {
       await this.audit.log(LogType.WARNING, `Podesavanje jacine neuspesno - biljka ID ${plantId} nije pronadjena`);
       throw new Error("Plant not found");
     }
-    if (targetPercent <= 0) {
-      await this.audit.log(LogType.WARNING, `Podesavanje jacine neuspesno - targetPercent <= 0 (uneto ${targetPercent})`);
-      throw new Error("targetPercent must be greater than 0");
+    if (Number.isNaN(targetPercent) || targetPercent < 1 || targetPercent > 5) {
+      await this.audit.log(LogType.WARNING, `Podesavanje jacine neuspesno - cilj mora biti izmedju 1 i 5 (uneto ${targetPercent})`);
+      throw new Error("targetStrength must be between 1 and 5");
     }
 
-    // Cilj: promena jačine za zadati procenat (npr. 65 => 65% trenutne vrednosti)
-    const ratio = targetPercent / 100;
-    const nextStrengthRaw = plant.oilStrength * ratio;
-    const nextStrength = Math.max(1, Math.min(5, Number(nextStrengthRaw.toFixed(1))));
-    plant.oilStrength = nextStrength;
+    // Postavi jacinu direktno na zadatu vrednost (1-5)
+    plant.oilStrength = Number(targetPercent.toFixed(1));
     const saved = await this.repo.save(plant);
-    await this.audit.log(LogType.INFO, `Podesena jacina ulja biljke ID ${plant.id} na ${nextStrength} (${targetPercent}% prethodne)`);
+    await this.audit.log(LogType.INFO, `Podesena jacina ulja biljke ID ${plant.id} na ${plant.oilStrength}`);
     return saved;
   }
 
@@ -198,3 +195,7 @@ export class PlantService implements IPlantService {
     return Number(raw.toFixed(1));
   }
 }
+
+
+
+

@@ -51,13 +51,11 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
     }
   }, [isOpen, initial]);
 
-  // Trap tab u okviru modala
+  // Trap tab у оквиру модала
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
     const container = modalRef.current;
-    const focusable = Array.from(
-      container.querySelectorAll<HTMLElement>("input, select, textarea, button")
-    ).filter((el) => !el.hasAttribute("disabled"));
+    const focusable = Array.from(container.querySelectorAll<HTMLElement>("input, select, textarea, button")).filter((el) => !el.hasAttribute("disabled"));
     focusable[0]?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,10 +89,10 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
 
   const validate = (): string | null => {
     const strength = Number(form.oilStrength);
-    if (!form.commonName || form.commonName.trim().length < 3) return "Opšti naziv mora imati najmanje 3 znaka.";
-    if (!form.latinName || form.latinName.trim().length < 3) return "Latinski naziv mora imati najmanje 3 znaka.";
-    if (!form.originCountry || form.originCountry.trim().length < 2) return "Zemlja porekla mora imati najmanje 2 znaka.";
-    if (Number.isNaN(strength) || strength < 1 || strength > 5) return "Jačina ulja mora biti između 1.0 i 5.0.";
+    if (!form.commonName || form.commonName.trim().length < 3) return "Општи назив мора имати најмање 3 знака.";
+    if (!form.latinName || form.latinName.trim().length < 3) return "Латински назив мора имати најмање 3 знака.";
+    if (!form.originCountry || form.originCountry.trim().length < 2) return "Земља порекла мора имати најмање 2 знака.";
+    if (Number.isNaN(strength) || strength < 1 || strength > 5) return "Јачина уља мора бити између 1.0 и 5.0.";
     return null;
   };
 
@@ -129,7 +127,7 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
       }
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Greška pri čuvanju biljke.");
+      setError(err?.response?.data?.message || err?.message || "Грешка при чувању биљке.");
     } finally {
       setIsSubmitting(false);
     }
@@ -144,7 +142,7 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
               <path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" />
             </svg>
           </div>
-          <span className="titlebar-title">{mode === "create" ? "Nova biljka" : "Izmena biljke"}</span>
+          <span className="titlebar-title">{mode === "create" ? "Нова биљка" : "Измена биљке"}</span>
           <div className="titlebar-controls">
             <button className="titlebar-btn close" onClick={onClose} aria-label="Close">
               <svg width="10" height="10" viewBox="0 0 10 10">
@@ -157,22 +155,22 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
         <div className="window-content plant-modal-content">
           <form onSubmit={handleSubmit} className="plant-form">
             <div>
-              <label className="plant-label" htmlFor="commonName">Opšti naziv</label>
-              <input id="commonName" name="commonName" className="auth-input" value={form.commonName} onChange={handleChange} placeholder="Npr. Ruza" required />
+              <label className="plant-label" htmlFor="commonName">Општи назив</label>
+              <input id="commonName" name="commonName" className="auth-input" value={form.commonName} onChange={handleChange} placeholder="Нпр. Ружа" required />
             </div>
 
             <div>
-              <label className="plant-label" htmlFor="latinName">Latinski naziv</label>
-              <input id="latinName" name="latinName" className="auth-input" value={form.latinName} onChange={handleChange} placeholder="Npr. Rosa rubiginosa" required />
+              <label className="plant-label" htmlFor="latinName">Латински назив</label>
+              <input id="latinName" name="latinName" className="auth-input" value={form.latinName} onChange={handleChange} placeholder="Нпр. Rosa rubiginosa" required />
             </div>
 
             <div>
-              <label className="plant-label" htmlFor="originCountry">Zemlja porekla</label>
-              <input id="originCountry" name="originCountry" className="auth-input" value={form.originCountry} onChange={handleChange} placeholder="Npr. Francuska" required />
+              <label className="plant-label" htmlFor="originCountry">Земља порекла</label>
+              <input id="originCountry" name="originCountry" className="auth-input" value={form.originCountry} onChange={handleChange} placeholder="Нпр. Француска" required />
             </div>
 
             <div>
-              <label className="plant-label" htmlFor="oilStrength">Jačina ulja (1.0 - 5.0)</label>
+              <label className="plant-label" htmlFor="oilStrength">Јачина уља (1.0 - 5.0)</label>
               <input
                 id="oilStrength"
                 name="oilStrength"
@@ -189,11 +187,11 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
             </div>
 
             <div>
-              <label className="plant-label" htmlFor="state">Stanje</label>
+              <label className="plant-label" htmlFor="state">Стање</label>
               <select id="state" name="state" className="auth-input" value={form.state} onChange={handleChange}>
-                <option value={PlantState.PLANTED}>Posađena</option>
-                <option value={PlantState.HARVESTED}>Ubrana</option>
-                <option value={PlantState.PROCESSED}>Prerađena</option>
+                <option value={PlantState.PLANTED}>Посађена</option>
+                <option value={PlantState.HARVESTED}>Убрана</option>
+                <option value={PlantState.PROCESSED}>Прерађена</option>
               </select>
             </div>
 
@@ -210,10 +208,10 @@ export const PlantFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose
 
             <div className="flex items-center justify-end gap-2 plant-footer">
               <button type="button" className="btn btn-ghost" onClick={onClose} disabled={isSubmitting}>
-                Otkaži
+                Откажи
               </button>
               <button type="submit" className="btn btn-accent" disabled={isSubmitting}>
-                {isSubmitting ? "Čuvanje..." : mode === "create" ? "Kreiraj" : "Sačuvaj izmene"}
+                {isSubmitting ? "Чување..." : mode === "create" ? "Креирај" : "Сачувај измене"}
               </button>
             </div>
           </form>

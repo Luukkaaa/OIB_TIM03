@@ -1,10 +1,11 @@
 import { Request, Response, Router } from "express";
 import { IPerfumeService } from "../../Domain/services/IPerfumeService";
-import { validateCreatePerfume, validateUpdatePerfume } from "../validators/PerfumeValidators";
+import { validateCreatePerfume, validateUpdatePerfume, validateProcessRequest } from "../validators/PerfumeValidators";
 import { CreatePerfumeDTO } from "../../Domain/DTOs/CreatePerfumeDTO";
 import { UpdatePerfumeDTO } from "../../Domain/DTOs/UpdatePerfumeDTO";
 import { AuditLogClient } from "../../Services/AuditLogClient";
 import { LogType } from "../../Services/LogType";
+import { ProcessRequestDTO } from "../../Domain/DTOs/ProcessRequestDTO";
 
 export class PerfumeController {
   private readonly router: Router;
@@ -21,6 +22,8 @@ export class PerfumeController {
     this.router.get("/perfumes/:id", this.getById.bind(this));
     this.router.put("/perfumes/:id", this.update.bind(this));
     this.router.delete("/perfumes/:id", this.delete.bind(this));
+    // pokretanje prerade biljaka u parfeme
+    this.router.post("/processing/start", this.process.bind(this));
   }
 
   private async safeAudit(type: LogType, message: string): Promise<void> {
@@ -74,6 +77,23 @@ export class PerfumeController {
     } catch (err) {
       await this.safeAudit(LogType.ERROR, `Brisanje parfema neuspesno: ${(err as Error).message}`);
       res.status(404).json({ success: false, message: (err as Error).message });
+    }
+  }
+
+  private async process(req: Request, res: Response): Promise<void> {
+    try {
+      const data = req.body as ProcessRequestDTO;
+      const validation = validateProcessRequest(data);
+      if (!validation.success) {
+        await this.safeAudit(LogType.WARNING, `Nevalidan zahtev za preradu biljaka: ${validation.message}`);
+        res.status(400).json({ success: false, message: validation.message });
+        return;
+      }
+      const perfumes = await this.perfumeService.process(data);
+      res.status(201).json({ success: true, data: perfumes });
+    } catch (err) {
+      await this.safeAudit(LogType.ERROR, `Prerada neuspesna: ${(err as Error).message}`);
+      res.status(400).json({ success: false, message: (err as Error).message });
     }
   }
 

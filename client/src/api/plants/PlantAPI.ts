@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+﻿import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { PlantDTO } from "../../models/plants/PlantDTO";
 import { IPlantAPI } from "./IPlantAPI";
 import { CreatePlantDTO } from "../../models/plants/CreatePlantDTO";
@@ -84,3 +84,5 @@ export class PlantAPI implements IPlantAPI {
     return (response.data as any).data ?? (response.data as PlantDTO[]);
   }
 }
+
+

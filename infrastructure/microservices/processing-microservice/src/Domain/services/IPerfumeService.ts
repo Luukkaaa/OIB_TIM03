@@ -1,5 +1,6 @@
 import { CreatePerfumeDTO } from "../DTOs/CreatePerfumeDTO";
 import { UpdatePerfumeDTO } from "../DTOs/UpdatePerfumeDTO";
+import { ProcessRequestDTO } from "../DTOs/ProcessRequestDTO";
 import { Perfume } from "../models/Perfume";
 
 export interface IPerfumeService {
@@ -9,4 +10,5 @@ export interface IPerfumeService {
   getById(id: number): Promise<Perfume>;
   getAll(): Promise<Perfume[]>;
   search(query: string): Promise<Perfume[]>;
+  process(req: ProcessRequestDTO): Promise<Perfume[]>;
 }

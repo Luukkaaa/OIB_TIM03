@@ -70,6 +70,7 @@ export class GatewayController {
     this.router.post("/perfumes", authenticate, authorize("admin", "sales_manager"), this.createPerfume.bind(this));
     this.router.put("/perfumes/:id", authenticate, authorize("admin", "sales_manager"), this.updatePerfume.bind(this));
     this.router.delete("/perfumes/:id", authenticate, authorize("admin", "sales_manager"), this.deletePerfume.bind(this));
+    this.router.post("/processing/start", authenticate, authorize("admin", "sales_manager"), this.startProcessing.bind(this));
 
     // Packaging: read admin/sales_manager/seller; write admin/sales_manager
     this.router.get("/packagings", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllPackaging.bind(this));
@@ -446,6 +447,27 @@ export class GatewayController {
       const q = req.params.q;
       const perfumes = await this.gatewayService.searchPerfumes(token, q);
       res.status(200).json(perfumes);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async startProcessing(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data = req.body as {
+        perfumeName: string;
+        perfumeType: string;
+        bottleVolumeMl: number;
+        bottleCount: number;
+        plantId: number;
+        expirationDate: string;
+        serialPrefix?: string;
+      };
+      const perfumes = await this.gatewayService.startProcessing(token, data);
+      res.status(201).json(perfumes);
     } catch (err: any) {
       const status = err?.response?.status ?? 400;
       const message = err?.response?.data?.message ?? (err as Error).message;

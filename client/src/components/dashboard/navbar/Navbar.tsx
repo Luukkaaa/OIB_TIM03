@@ -90,7 +90,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ userAPI }) => 
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M6 2v2H3v8h3v2H2V2h4zm4 3l4 3-4 3V9H6V7h4V5z"/>
               </svg>
-              Logout
+              Одјава
             </button>
           </>
         ) : null}

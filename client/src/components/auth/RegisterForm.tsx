@@ -42,12 +42,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
     // Validation
     if (formData.password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Лозинке се не поклапају.");
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setError("Лозинка мора имати најмање 6 карактера.");
       return;
     }
 
@@ -57,7 +57,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       const response = await authAPI.register(formData);
 
       if (response.success) {
-        setSuccess(response.message || "Registration successful!");
+        setSuccess(response.message || "Регистрација је успела!");
         
         // Auto-login if token is provided
         if (response.token) {
@@ -67,10 +67,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           }, 1500);
         }
       } else {
-        setError(response.message || "Registration failed. Please try again.");
+        setError(response.message || "Регистрација није успела. Покушајте поново.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "An error occurred. Please try again.");
+      setError(err.response?.data?.message || "Догодила се грешка. Покушајте поново.");
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +80,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
         <label htmlFor="username" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Username
+          Корисничко име
         </label>
         <input
           type="text"
@@ -88,7 +88,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           name="username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Choose a username"
+          placeholder="Изаберите корисничко име"
           required
           disabled={isLoading}
         />
@@ -97,7 +97,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="firstName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Name
+          Име
         </label>
         <input
           type="text"
@@ -105,7 +105,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           name="firstName"
           value={formData.firstName}
           onChange={handleChange}
-          placeholder="Choose a name"
+          placeholder="Унесите име"
           required
           disabled={isLoading}
         />
@@ -113,7 +113,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="lastName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Last Name
+          Презиме
         </label>
         <input
           type="text"
@@ -121,7 +121,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           name="lastName"
           value={formData.lastName}
           onChange={handleChange}
-          placeholder="Choose a last name"
+          placeholder="Унесите презиме"
           required
           disabled={isLoading}
         />
@@ -130,7 +130,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="email" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Email
+          Имејл
         </label>
         <input
           type="email"
@@ -138,7 +138,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder="your.email@example.com"
+          placeholder="vas.email@example.com"
           required
           disabled={isLoading}
         />
@@ -146,7 +146,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="role" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Role
+          Улога
         </label>
         <select
           id="role"
@@ -156,15 +156,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           required
           disabled={isLoading}
         >
-          <option value={UserRole.SELLER}>Seller</option>
-          <option value={UserRole.ADMIN}>Admin</option>
-          <option value={UserRole.SALES_MANAGER}>Sales Manager</option>
+          <option value={UserRole.SELLER}>Продавац</option>
+          <option value={UserRole.ADMIN}>Админ</option>
+          <option value={UserRole.SALES_MANAGER}>Менаџер продаје</option>
         </select>
       </div>
 
       <div>
         <label htmlFor="password" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Password
+          Лозинка
         </label>
         <input
           type="password"
@@ -172,7 +172,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="Create a password (min 6 characters)"
+          placeholder="Креирајте лозинку (мин 6 карактера)"
           required
           disabled={isLoading}
         />
@@ -180,7 +180,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="confirmPassword" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Confirm Password
+          Потврда лозинке
         </label>
         <input
           type="password"
@@ -191,7 +191,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
             setConfirmPassword(e.target.value);
             setError("");
           }}
-          placeholder="Re-enter your password"
+          placeholder="Поново унесите лозинку"
           required
           disabled={isLoading}
         />
@@ -199,7 +199,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       <div>
         <label htmlFor="profileImage" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          Profile Image URL <span style={{ color: "var(--win11-text-tertiary)", fontWeight: 400 }}>(Optional)</span>
+          URL слике профила <span style={{ color: "var(--win11-text-tertiary)", fontWeight: 400 }}>(опционо)</span>
         </label>
         <input
           type="url"
@@ -207,7 +207,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           name="profileImage"
           value={formData.profileImage}
           onChange={handleChange}
-          placeholder="https://example.com/avatar.jpg"
+          placeholder="https://primer.com/avatar.jpg"
           disabled={isLoading}
         />
       </div>
@@ -257,10 +257,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
-            <span>Creating account...</span>
+            <span>Креирање налога...</span>
           </div>
         ) : (
-          "Register"
+          "Региструј се"
         )}
       </button>
     </form>

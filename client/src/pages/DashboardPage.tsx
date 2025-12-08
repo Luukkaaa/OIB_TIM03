@@ -1,86 +1,126 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
+import { useAuth } from "../hooks/useAuthHook";
 import { IUserAPI } from "../api/users/IUserAPI";
 import { IPlantAPI } from "../api/plants/IPlantAPI";
 import { ISaleAPI } from "../api/sales/ISaleAPI";
-import { DashboardNavbar } from "../components/dashboard/navbar/Navbar";
-import { UserManagement } from "../components/dashboard/users/UserManagement";
+import { IProcessingAPI } from "../api/processing/IProcessingAPI";
 import { PlantManagement } from "../components/dashboard/plants/PlantManagement";
 import { SaleList } from "../components/dashboard/sales/SaleList";
+import { UserManagement } from "../components/dashboard/users/UserManagement";
 import { ProductionPanel } from "../components/dashboard/production/ProductionPanel";
+import { ProcessingPanel } from "../components/dashboard/processing/ProcessingPanel";
+
+type MainTab =
+  | "pocetna"
+  | "proizvodnja"
+  | "prerada"
+  | "skladistenje"
+  | "prodaja"
+  | "korisnici"
+  | "analizaprodaje"
+  | "analizaperformansi";
 
 type DashboardPageProps = {
   userAPI: IUserAPI;
   plantAPI: IPlantAPI;
   saleAPI: ISaleAPI;
+  processingAPI: IProcessingAPI;
 };
 
-type MainTab = "pocetna" | "proizvodnja" | "prerada" | "pakovanje" | "skladistenje" | "prodaja" | "korisnici";
+const tabs: { id: MainTab; label: string }[] = [
+  { id: "pocetna", label: "Почетна" },
+  { id: "proizvodnja", label: "Производња" },
+  { id: "prerada", label: "Прерада" },
+  { id: "skladistenje", label: "Складиштење" },
+  { id: "prodaja", label: "Продаја" },
+  { id: "korisnici", label: "Корисници" },
+  { id: "analizaprodaje", label: "Анализа продаје" },
+  { id: "analizaperformansi", label: "Анализа перформанси" },
+];
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI, saleAPI }) => {
+const PendingCard: React.FC<{ title: string }> = ({ title }) => (
+  <div className="card" style={{ padding: 16, textAlign: "center" }}>
+    <h3 style={{ margin: "0 0 8px 0" }}>{title}</h3>
+    <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Овај сервис треба да се уради.</p>
+  </div>
+);
+
+export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI, saleAPI, processingAPI }) => {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<MainTab>("pocetna");
 
-  const tabs = [
-    { key: "pocetna", label: "Početna" },
-    { key: "proizvodnja", label: "Proizvodnja" },
-    { key: "prerada", label: "Prerada" },
-    { key: "pakovanje", label: "Pakovanje" },
-    { key: "skladistenje", label: "Skladištenje" },
-    { key: "prodaja", label: "Prodaja" },
-    { key: "korisnici", label: "Korisnici" },
-  ];
-
   const renderContent = () => {
-    if (activeTab === "korisnici") {
-      return (
-        <div style={{ flex: 1, overflow: "auto" }}>
-          <UserManagement userAPI={userAPI} />
-        </div>
-      );
-    }
-
-    if (activeTab === "proizvodnja") {
-      return <ProductionPanel plantAPI={plantAPI} />;
-    }
-
-    return (
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", minHeight: 0, height: "100%" }}>
-          <div style={{ minHeight: 0, overflow: "auto" }}>
+    switch (activeTab) {
+      case "korisnici":
+        return <UserManagement userAPI={userAPI} />;
+      case "proizvodnja":
+        return <ProductionPanel plantAPI={plantAPI} />;
+      case "prerada":
+        return <ProcessingPanel processingAPI={processingAPI} plantAPI={plantAPI} />;
+      case "skladistenje":
+        return <PendingCard title="Складиштење" />;
+      case "prodaja":
+        return <PendingCard title="Продаја" />;
+      case "analizaprodaje":
+        return <PendingCard title="Анализа продаје" />;
+      case "analizaperformansi":
+        return <PendingCard title="Анализа перформанси" />;
+      case "pocetna":
+      default:
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 16 }}>
             <PlantManagement plantAPI={plantAPI} />
-          </div>
-          <div style={{ minHeight: 0, overflow: "auto" }}>
             <SaleList saleAPI={saleAPI} />
           </div>
-        </div>
-      </div>
-    );
+        );
+    }
   };
 
   return (
-    <div className="overlay-blur-none" style={{ position: "fixed", inset: 0 }}>
-      <div
-        className="window"
-        style={{ width: "1200px", maxWidth: "98%", height: "720px", maxHeight: "92%", display: "flex", flexDirection: "column" }}
+    <div className="page-wrapper" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+      <header
+        className="card"
+        style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}
       >
-        <DashboardNavbar userAPI={userAPI} />
-
-        <div className="window-content" style={{ padding: "16px 18px", overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
-          <div className="flex items-center gap-2" style={{ marginBottom: "12px" }}>
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                className={`btn ${activeTab === tab.key ? "btn-accent" : "btn-ghost"}`}
-                onClick={() => setActiveTab(tab.key as MainTab)}
-                style={{ minWidth: 120 }}
-              >
-                {tab.label}
-              </button>
-            ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              background: "var(--win11-accent)",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+            }}
+          >
+            {user?.username ? user.username[0].toUpperCase() : "?"}
           </div>
-
-          {renderContent()}
+          <div style={{ lineHeight: 1.3 }}>
+            <div style={{ fontWeight: 700 }}>{user?.username ?? "Корисник"}</div>
+            <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>{user?.role?.toUpperCase() ?? ""}</div>
+          </div>
         </div>
-      </div>
+        <button className="btn btn-ghost" onClick={() => logout()}>
+          Одјава
+        </button>
+      </header>
+
+      <nav className="card" style={{ padding: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            className={`btn ${activeTab === t.id ? "btn-accent" : "btn-ghost"}`}
+            onClick={() => setActiveTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      <main>{renderContent()}</main>
     </div>
   );
 };
