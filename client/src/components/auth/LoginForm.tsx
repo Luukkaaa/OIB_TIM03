@@ -3,6 +3,7 @@ import { IAuthAPI } from "../../api/auth/IAuthAPI";
 import { LoginUserDTO } from "../../models/auth/LoginUserDTO";
 import { useAuth } from "../../hooks/useAuthHook";
 import { useNavigate } from "react-router-dom";
+import "./LoginForm.css";
 
 type LoginFormProps = {
   authAPI: IAuthAPI;
@@ -41,21 +42,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
         setError(response.message || "Пријава није успела. Покушајте поново.");
       }
     } catch (err: any) {
-      setError(err || "Догодила се грешка. Покушајте поново.");
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Догодила се грешка. Покушајте поново.";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if(isAuthenticated)
-        navigate("/dashboard");
-  })
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="username" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="username" className="login-label">
           Корисничко име
         </label>
         <input
@@ -71,7 +77,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
       </div>
 
       <div>
-        <label htmlFor="password" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="password" className="login-label">
           Лозинка
         </label>
         <input
@@ -87,32 +93,30 @@ export const LoginForm: React.FC<LoginFormProps> = ({ authAPI }) => {
       </div>
 
       {error && (
-        <div
-          className="card"
-          style={{
-            padding: "12px 16px",
-            backgroundColor: "rgba(196, 43, 28, 0.15)",
-            borderColor: "var(--win11-close-hover)",
-          }}
-        >
+        <div className="card login-error-card">
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--win11-close-hover)">
-              <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm0 2a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3A.5.5 0 018 5zm0 6a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
+            <svg
+              className="login-error-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="var(--win11-close-hover)"
+            >
+              <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm0 2a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3A.5.5 0 018 5zm0 6a.75.75 0 110 1.5.75.75 0 010-1.5z" />
             </svg>
-            <span style={{ fontSize: "13px", color: "var(--win11-text-primary)" }}>{error}</span>
+            <span className="login-error-text">{error}</span>
           </div>
         </div>
       )}
 
       <button
         type="submit"
-        className="btn btn-accent"
+        className="btn btn-accent login-submit"
         disabled={isLoading}
-        style={{ marginTop: "8px" }}
       >
         {isLoading ? (
           <div className="flex items-center gap-2">
-            <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+            <div className="spinner login-spinner" />
             <span>Пријављивање...</span>
           </div>
         ) : (

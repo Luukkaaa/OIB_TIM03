@@ -1,0 +1,80 @@
+.productionlog-root {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* HEADER */
+
+.productionlog-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--win11-divider);
+  background: var(--win11-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.productionlog-title {
+  margin: 0;
+}
+
+.productionlog-subtitle {
+  margin: 0;
+  color: var(--win11-text-secondary);
+}
+
+.productionlog-refresh-btn {
+  padding: 6px 10px;
+}
+
+/* ERROR */
+
+.productionlog-error {
+  margin: 8px;
+  padding: 10px 12px;
+  background: rgba(196, 43, 28, 0.12);
+  border-color: var(--win11-close-hover);
+}
+
+.productionlog-error-text {
+  font-size: 13px;
+}
+
+/* BODY */
+
+.productionlog-body {
+  flex: 1;
+  overflow: auto;
+}
+
+.productionlog-empty {
+  padding: 12px;
+  color: var(--win11-text-secondary);
+}
+
+.productionlog-entry {
+  border-bottom: 1px solid var(--win11-divider);
+  padding: 10px 12px;
+}
+
+.productionlog-entry-time {
+  font-weight: 600;
+}
+
+.productionlog-entry-message {
+  color: var(--win11-text-secondary);
+  font-size: 13px;
+}
+
+/* FOOTER */
+
+.productionlog-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--win11-divider);
+  color: var(--win11-text-secondary);
+  font-size: 12px;
+}

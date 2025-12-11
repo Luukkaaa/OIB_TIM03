@@ -3,6 +3,7 @@ import { IPerfumeService } from "../Domain/services/IPerfumeService";
 import { Perfume } from "../Domain/models/Perfume";
 import { CreatePerfumeDTO } from "../Domain/DTOs/CreatePerfumeDTO";
 import { UpdatePerfumeDTO } from "../Domain/DTOs/UpdatePerfumeDTO";
+import { randomUUID } from "crypto";
 import { AuditLogClient } from "./AuditLogClient";
 import { LogType } from "./LogType";
 import { PerfumeType } from "../Domain/enums/PerfumeType";
@@ -138,12 +139,11 @@ export class PerfumeService implements IPerfumeService {
     await this.production.harvest(plant.commonName, neededPlants);
 
     // kreiranje parfema sa serijskim brojem
-    const prefix = req.serialPrefix ?? "PP-2025";
+    const prefix = (req.serialPrefix ?? "PP-2025").trim();
     const createdPerfumes: Perfume[] = [];
     const baseName = req.perfumeName.trim();
     for (let i = 0; i < req.bottleCount; i++) {
-      const serialNumber = `${prefix}-${Date.now()}-${i + 1}`;
-      await this.ensureUniqueSerial(serialNumber);
+      const serialNumber = await this.generateUniqueSerial(prefix);
       const perfume = this.repo.create({
         name: baseName,
         type: req.perfumeType,
@@ -160,6 +160,55 @@ export class PerfumeService implements IPerfumeService {
       `Prerada zavrsena: ${req.bottleCount} bocica (${req.perfumeName}), potreba biljaka: ${neededPlants}`
     );
     return createdPerfumes;
+  }
+
+  // Generise jedinstven serijski broj; ako je prosledjen ceo broj (npr. PP-2025-GAC-005) koristi ga bez dodataka
+  private async generateUniqueSerial(base: string): Promise<string> {
+    const prefix = (base || "PP-2025").trim();
+    const fullSerialPattern = /^PP-2025-[A-Za-z0-9_-]+$/;
+
+    // Ako je prosledjen kompletan serijski broj, koristi ga direktno (bez sufiksa), ali proveri unikatnost
+    if (fullSerialPattern.test(prefix) && prefix.split("-").length >= 3) {
+      const exists = await this.repo.findOne({ where: { serialNumber: prefix } });
+      if (!exists) return prefix;
+
+      // ako već postoji, pokušaj da uvećaš numerički završetak (npr. ...-005 -> ...-006)
+      const numericTail = prefix.match(/^(.*-)(\d+)$/);
+      if (numericTail) {
+        const [_, core, num] = numericTail;
+        let candidate = parseInt(num, 10);
+        while (true) {
+          candidate += 1;
+          const next = `${core}${String(candidate).padStart(num.length, "0")}`;
+          const clash = await this.repo.findOne({ where: { serialNumber: next } });
+          if (!clash) return next;
+        }
+      }
+
+      // ako nema numerički kraj, prijavi grešku
+      throw new Error("Serijski broj već postoji, odaberite drugi.");
+    }
+
+    // Inace generisi inkrementalni sufiks
+    const existing = await this.repo.find({
+      where: { serialNumber: Like(`${prefix}-%`) },
+      order: { id: "DESC" },
+    });
+
+    let maxCounter = 0;
+    for (const item of existing) {
+      const match = item.serialNumber.match(new RegExp(`^${prefix}-(\\d+)$`));
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!Number.isNaN(num)) {
+          maxCounter = Math.max(maxCounter, num);
+        }
+      }
+    }
+
+    const next = maxCounter + 1;
+    // petocifreni broj za uredan prikaz: PP-2025-00001
+    return `${prefix}-${String(next).padStart(5, "0")}`;
   }
 
   /**

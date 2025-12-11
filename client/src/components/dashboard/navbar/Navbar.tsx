@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { IUserAPI } from "../../../api/users/IUserAPI";
 import { useAuth } from "../../../hooks/useAuthHook";
 import { UserDTO } from "../../../models/users/UserDTO";
+import "./DashboardNavbar.css";
 
 type DashboardNavbarProps = {
   userAPI: IUserAPI;
@@ -15,80 +16,68 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ userAPI }) => 
   const navigate = useNavigate();
 
   useEffect(() => {
+    const hasAuth = !!authUser?.id && !!token;
+    if (!hasAuth) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchUser = async () => {
-      if (authUser?.id) {
-        try {
-          const userData = await userAPI.getUserById(token ?? "", authUser.id, );
-          setUser(userData);
-        } catch (error) {
-          console.error("Failed to fetch user:", error);
-        } finally {
-          setIsLoading(false);
-        }
+      setIsLoading(true);
+      try {
+        const userData = await userAPI.getUserById(token ?? "", authUser.id);
+        setUser(userData);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUser();
-  }, [authUser, userAPI]);
+    const onUserUpdated = () => fetchUser();
+    window.addEventListener("user-updated", onUserUpdated);
+    return () => window.removeEventListener("user-updated", onUserUpdated);
+  }, [authUser?.id, token, userAPI]);
 
   const handleLogout = () => {
     logout();
     navigate("/auth");
   };
 
+  const initials =
+    user?.username?.slice(0, 2).toUpperCase() ||
+    user?.email?.slice(0, 2).toUpperCase() ||
+    "";
+
   return (
-    <nav className="titlebar" style={{ height: "60px", borderRadius: 0 }}>
-      <div className="flex items-center gap-3" style={{ marginLeft: "auto" }}>
+    <nav className="titlebar navbar-top">
+      <div className="navbar-right">
         {isLoading ? (
-          <div className="spinner" style={{ width: "20px", height: "20px", borderWidth: "2px" }}></div>
+          <div className="spinner navbar-spinner" aria-label="Учитавање"></div>
         ) : user ? (
           <>
-            {/* Profile Image */}
             {user.profileImage ? (
               <img
                 src={user.profileImage}
                 alt={user.username}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "2px solid var(--win11-divider)",
-                }}
+                className="navbar-avatar-img"
               />
             ) : (
-              <div
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  background: "var(--win11-accent)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  color: "#000",
-                }}
-              >
-                {user.username.charAt(0).toUpperCase()}
+              <div className="navbar-avatar-fallback" aria-label={user.username}>
+                {initials}
               </div>
             )}
 
-            {/* User Info */}
-            <div className="flex flex-col" style={{ gap: 0 }}>
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--win11-text-primary)" }}>
-                {user.email}
-              </span>
-              <span style={{ fontSize: "11px", color: "var(--win11-text-tertiary)" }}>
-                {user.role}
-              </span>
+            <div className="navbar-user-info">
+              <span className="navbar-email">{user.email}</span>
+              <span className="navbar-role">{user.role}</span>
             </div>
 
-            {/* Logout Button */}
-            <button className="btn btn-ghost" onClick={handleLogout} style={{ padding: "8px 16px" }}>
+            <button className="btn btn-ghost navbar-logout" onClick={handleLogout}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M6 2v2H3v8h3v2H2V2h4zm4 3l4 3-4 3V9H6V7h4V5z"/>
+                <path d="M6 2v2H3v8h3v2H2V2h4zm4 3l4 3-4 3V9H6V7h4V5z" />
               </svg>
               Одјава
             </button>

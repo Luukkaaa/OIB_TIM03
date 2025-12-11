@@ -4,6 +4,7 @@ import { RegistrationUserDTO } from "../../models/auth/RegistrationUserDTO";
 import { UserRole } from "../../enums/UserRole";
 import { useAuth } from "../../hooks/useAuthHook";
 import { useNavigate } from "react-router-dom";
+import "./RegisterForm.css";
 
 type RegisterFormProps = {
   authAPI: IAuthAPI;
@@ -26,11 +27,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "role" ? (value as UserRole) : value,
+    }));
     setError("");
     setSuccess("");
   };
@@ -40,7 +44,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
     setError("");
     setSuccess("");
 
-    // Validation
     if (formData.password !== confirmPassword) {
       setError("Лозинке се не поклапају.");
       return;
@@ -58,8 +61,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
 
       if (response.success) {
         setSuccess(response.message || "Регистрација је успела!");
-        
-        // Auto-login if token is provided
+
         if (response.token) {
           login(response.token);
           setTimeout(() => {
@@ -67,10 +69,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
           }, 1500);
         }
       } else {
-        setError(response.message || "Регистрација није успела. Покушајте поново.");
+        setError(
+          response.message || "Регистрација није успела. Покушајте поново."
+        );
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Догодила се грешка. Покушајте поново.");
+      setError(
+        err?.response?.data?.message ||
+          "Догодила се грешка. Покушајте поново."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +86,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="username" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="username" className="register-label">
           Корисничко име
         </label>
         <input
@@ -94,9 +101,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
         />
       </div>
 
-
       <div>
-        <label htmlFor="firstName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="firstName" className="register-label">
           Име
         </label>
         <input
@@ -112,7 +118,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       </div>
 
       <div>
-        <label htmlFor="lastName" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="lastName" className="register-label">
           Презиме
         </label>
         <input
@@ -127,9 +133,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
         />
       </div>
 
-
       <div>
-        <label htmlFor="email" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="email" className="register-label">
           Имејл
         </label>
         <input
@@ -145,7 +150,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       </div>
 
       <div>
-        <label htmlFor="role" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="role" className="register-label">
           Улога
         </label>
         <select
@@ -163,7 +168,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       </div>
 
       <div>
-        <label htmlFor="password" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="password" className="register-label">
           Лозинка
         </label>
         <input
@@ -179,7 +184,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
+        <label htmlFor="confirmPassword" className="register-label">
           Потврда лозинке
         </label>
         <input
@@ -198,8 +203,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       </div>
 
       <div>
-        <label htmlFor="profileImage" style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>
-          URL слике профила <span style={{ color: "var(--win11-text-tertiary)", fontWeight: 400 }}>(опционо)</span>
+        <label htmlFor="profileImage" className="register-label">
+          URL слике профила{" "}
+          <span className="register-optional">(опционо)</span>
         </label>
         <input
           type="url"
@@ -213,50 +219,47 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ authAPI }) => {
       </div>
 
       {error && (
-        <div
-          className="card"
-          style={{
-            padding: "12px 16px",
-            backgroundColor: "rgba(196, 43, 28, 0.15)",
-            borderColor: "var(--win11-close-hover)",
-          }}
-        >
+        <div className="card register-error-card">
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--win11-close-hover)">
-              <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm0 2a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3A.5.5 0 018 5zm0 6a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
+            <svg
+              className="register-error-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="var(--win11-close-hover)"
+            >
+              <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm0 2a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3A.5.5 0 018 5zm0 6a.75.75 0 110 1.5.75.75 0 010-1.5z" />
             </svg>
-            <span style={{ fontSize: "13px", color: "var(--win11-text-primary)" }}>{error}</span>
+            <span className="register-error-text">{error}</span>
           </div>
         </div>
       )}
 
       {success && (
-        <div
-          className="card"
-          style={{
-            padding: "12px 16px",
-            backgroundColor: "rgba(16, 124, 16, 0.15)",
-            borderColor: "#107c10",
-          }}
-        >
+        <div className="card register-success-card">
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="#107c10">
-              <path d="M8 2a6 6 0 110 12A6 6 0 018 2zm2.354 4.146a.5.5 0 010 .708l-3 3a.5.5 0 01-.708 0l-1.5-1.5a.5.5 0 11.708-.708L7 8.793l2.646-2.647a.5.5 0 01.708 0z"/>
+            <svg
+              className="register-success-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="#107c10"
+            >
+              <path d="M8 2a6 6 0 110 12A6 6 0 018 2zm2.354 4.146a.5.5 0 010 .708l-3 3a.5.5 0 01-.708 0l-1.5-1.5a.5.5 0 11.708-.708L7 8.793l2.646-2.647a.5.5 0 01.708 0z" />
             </svg>
-            <span style={{ fontSize: "13px", color: "var(--win11-text-primary)" }}>{success}</span>
+            <span className="register-success-text">{success}</span>
           </div>
         </div>
       )}
 
       <button
         type="submit"
-        className="btn btn-accent"
+        className="btn btn-accent register-submit"
         disabled={isLoading}
-        style={{ marginTop: "8px" }}
       >
         {isLoading ? (
           <div className="flex items-center gap-2">
-            <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+            <div className="spinner register-spinner" />
             <span>Креирање налога...</span>
           </div>
         ) : (

@@ -353,6 +353,10 @@ export class GatewayController {
     try {
       const token = req.headers.authorization ?? "";
       const data = req.body as AdjustStrengthDTO;
+      if (!data.plantId) {
+        res.status(400).json({ message: "Morate uneti ID biljke." });
+        return;
+      }
       const plant = await this.gatewayService.adjustPlantStrength(token, data);
       res.status(200).json(plant);
     } catch (err: any) {

@@ -3,6 +3,7 @@ import { IPlantAPI } from "../../../api/plants/IPlantAPI";
 import { PlantDTO } from "../../../models/plants/PlantDTO";
 import { useAuth } from "../../../hooks/useAuthHook";
 import { PlantState } from "../../../models/plants/PlantState";
+import "./PlantManagement.css";
 
 type Props = {
   plantAPI: IPlantAPI;
@@ -38,7 +39,7 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
   const handleSearch = async () => {
     if (!token) return;
     if (!search.trim()) {
-      loadPlants();
+      void loadPlants();
       return;
     }
     if (search.trim().length < 2) {
@@ -60,84 +61,118 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
   const badgeForState = (state: PlantState) => {
     switch (state) {
       case PlantState.PLANTED:
-        return { label: "Посађена", color: "#90caf933" };
+        return { label: "Посађена", className: "plant-badge-planted" };
       case PlantState.HARVESTED:
-        return { label: "Убрана", color: "#f7d44a33" };
+        return { label: "Убрана", className: "plant-badge-harvested" };
       case PlantState.PROCESSED:
-        return { label: "Прерађена", color: "#4caf5033" };
+        return { label: "Прерађена", className: "plant-badge-processed" };
       default:
-        return { label: state, color: "var(--win11-subtle)" };
+        return { label: state, className: "plant-badge-default" };
     }
   };
 
   return (
-    <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+    <div className="card plantmgmt-root">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 style={{ margin: 0 }}>Биљке</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед и претрага биљака.</p>
+          <h3 className="plantmgmt-title">Биљке</h3>
+          <p className="plantmgmt-subtitle">Преглед и претрага биљака.</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 plantmgmt-search-row">
+        <label htmlFor="plantSearch" className="plantmgmt-search-label">
+          Претрага
+        </label>
         <input
+          id="plantSearch"
           type="text"
           placeholder="Претрага биљака..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          style={{ flex: 1 }}
+          className="plantmgmt-search-input"
         />
-        <button className="btn btn-ghost" onClick={handleSearch}>Претражи</button>
-        <button className="btn btn-ghost" onClick={loadPlants}>Освежи</button>
+        <button className="btn btn-ghost" onClick={handleSearch}>
+          Претражи
+        </button>
+        <button className="btn btn-ghost" onClick={loadPlants}>
+          Освежи
+        </button>
       </div>
 
       {error && (
-        <div className="card" style={{ padding: "10px 12px", background: "rgba(196,43,28,0.12)", borderColor: "var(--win11-close-hover)" }}>
+        <div className="card plantmgmt-error-card">
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--win11-close-hover)">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="var(--win11-close-hover)"
+            >
               <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm0 2a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3A.5.5 0 018 5zm0 6a.75.75 0 110 1.5.75.75 0 010-1.5z" />
             </svg>
-            <span style={{ fontSize: "13px" }}>{error}</span>
+            <span className="plantmgmt-error-text">{error}</span>
           </div>
         </div>
       )}
 
-      <div className="card" style={{ padding: 0, overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ overflow: "auto", flex: 1, minHeight: 0 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div className="card plantmgmt-table-card">
+        <div className="plantmgmt-table-scroll">
+          <table className="plantmgmt-table">
             <thead>
-              <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px" }}>Назив</th>
-                <th style={{ padding: "10px 12px" }}>Латински</th>
-                <th style={{ padding: "10px 12px" }}>Земља</th>
-                <th style={{ padding: "10px 12px" }}>Јачина</th>
-                <th style={{ padding: "10px 12px" }}>Стање</th>
+              <tr className="plantmgmt-table-header-row">
+                <th className="plantmgmt-table-header-cell">Назив</th>
+                <th className="plantmgmt-table-header-cell">Латински</th>
+                <th className="plantmgmt-table-header-cell">Земља</th>
+                <th className="plantmgmt-table-header-cell">Јачина</th>
+                <th className="plantmgmt-table-header-cell">Стање</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Учитавање...</td>
+                  <td className="plantmgmt-table-cell center" colSpan={5}>
+                    Учитавање...
+                  </td>
                 </tr>
               ) : plants.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Нема биљака за приказ.</td>
+                  <td className="plantmgmt-table-cell center" colSpan={5}>
+                    Нема биљака за приказ.
+                  </td>
                 </tr>
               ) : (
                 plants.map((plant) => {
                   const badge = badgeForState(plant.state);
+                  const strengthValid =
+                    plant.oilStrength !== undefined &&
+                    !Number.isNaN(Number(plant.oilStrength));
                   return (
-                    <tr key={plant.id} style={{ borderTop: "1px solid var(--win11-divider)" }}>
-                      <td style={{ padding: "10px 12px" }}>
-                        <div style={{ fontWeight: 600 }}>{plant.commonName}</div>
-                        <div style={{ color: "var(--win11-text-secondary)", fontSize: "12px" }}>ID: {plant.id}</div>
+                    <tr key={plant.id} className="plantmgmt-table-row">
+                      <td className="plantmgmt-table-cell">
+                        <div className="plantmgmt-plant-name">
+                          {plant.commonName}
+                        </div>
+                        <div className="plantmgmt-plant-id">
+                          ID: {plant.id}
+                        </div>
                       </td>
-                      <td style={{ padding: "10px 12px" }}>{plant.latinName}</td>
-                      <td style={{ padding: "10px 12px" }}>{plant.originCountry}</td>
-                      <td style={{ padding: "10px 12px" }}>{Number(plant.oilStrength).toFixed(1)}</td>
-                      <td style={{ padding: "10px 12px" }}>
-                        <span className="badge" style={{ padding: "4px 8px", borderRadius: "8px", background: badge.color }}>
+                      <td className="plantmgmt-table-cell">
+                        {plant.latinName}
+                      </td>
+                      <td className="plantmgmt-table-cell">
+                        {plant.originCountry}
+                      </td>
+                      <td className="plantmgmt-table-cell">
+                        {strengthValid
+                          ? Number(plant.oilStrength).toFixed(1)
+                          : "-"}
+                      </td>
+                      <td className="plantmgmt-table-cell">
+                        <span
+                          className={`badge plantmgmt-badge ${badge.className}`}
+                        >
                           {badge.label}
                         </span>
                       </td>
@@ -150,7 +185,7 @@ export const PlantManagement: React.FC<Props> = ({ plantAPI }) => {
         </div>
       </div>
 
-      <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
+      <div className="plantmgmt-footer">
         Укупно биљака: {plants.length}
       </div>
     </div>

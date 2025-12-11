@@ -1,25 +1,78 @@
+/* === Overlay === */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* === Modal Window === */
 .plant-modal-window {
-  width: 520px;
+  width: 460px;
   max-width: 95%;
+  background: var(--win11-background);
+  border-radius: 12px;
+  box-shadow: 0 0 22px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  outline: none;
 }
 
+/* === Titlebar === */
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--win11-divider);
+  background: var(--win11-subtle);
+}
+
+.titlebar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.titlebar-title {
+  font-weight: 600;
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: center;
+}
+
+.titlebar-btn.close {
+  padding: 4px;
+}
+
+/* === Modal Content === */
 .plant-modal-content {
-  padding: 18px 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
+/* === Form === */
 .plant-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .plant-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   font-size: 14px;
   font-weight: 600;
 }
 
+/* === Error Card === */
 .plant-error {
   padding: 10px 12px;
   background: rgba(196, 43, 28, 0.12);
@@ -28,8 +81,13 @@
 
 .plant-error-text {
   font-size: 13px;
+  color: var(--win11-text-primary);
 }
 
+/* === Footer === */
 .plant-footer {
-  margin-top: 6px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }

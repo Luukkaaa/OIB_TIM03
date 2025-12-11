@@ -1,50 +1,28 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ISaleAPI } from "../../../api/sales/ISaleAPI";
 import { SaleDTO } from "../../../models/sales/SaleDTO";
-import { useAuth } from "../../../hooks/useAuthHook";
 import { SaleType } from "../../../models/sales/SaleType";
 import { PaymentMethod } from "../../../models/sales/PaymentMethod";
+import { useAuth } from "../../../hooks/useAuthHook";
+import "./SaleList.css";
 
 type Props = {
   saleAPI: ISaleAPI;
 };
 
-const badge = (type: SaleType) => {
-  switch (type) {
-    case SaleType.MALOPRODAJA:
-      return { label: "Малопродаја", color: "#4caf5033" };
-    case SaleType.VELEPRODAJA:
-      return { label: "Велепродаја", color: "#f7d44a33" };
-    default:
-      return { label: type, color: "var(--win11-subtle)" };
-  }
-};
-
-const paymentLabel = (p: PaymentMethod) => {
-  switch (p) {
-    case PaymentMethod.GOTOVINA:
-      return "Готовина";
-    case PaymentMethod.UPLATA_NA_RACUN:
-      return "Уплата на рачун";
-    case PaymentMethod.КАРТИЦА:
-    case PaymentMethod.KARTICA:
-      return "Картица";
-    default:
-      return p;
-  }
-};
-
 export const SaleList: React.FC<Props> = ({ saleAPI }) => {
   const { token } = useAuth();
+  const hasToken = useMemo(() => !!token, [token]);
+
   const [sales, setSales] = useState<SaleDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  const hasToken = useMemo(() => !!token, [token]);
-
   useEffect(() => {
-    if (hasToken) void loadSales();
+    if (hasToken) {
+      void loadSales();
+    }
   }, [hasToken]);
 
   const loadSales = async () => {
@@ -52,12 +30,13 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
     setLoading(true);
     setError("");
     try {
-      const data = await saleAPI.getAllSales(token);
-      setSales(data);
+      const result = await saleAPI.getAllSales(token);
+      setSales(result);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Неуспешно учитавање продаја. Проверите да је sales сервис покренут.";
+      const msg =
+        err?.response?.data?.message ||
+        "Неуспешно учитавање рачуна. Проверите мрежу или се поново пријавите.";
       setError(msg);
-      setSales([]);
     } finally {
       setLoading(false);
     }
@@ -65,102 +44,139 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
 
   const handleSearch = async () => {
     if (!token) return;
-    if (!search.trim()) {
-      loadSales();
+    const query = search.trim();
+    if (!query) {
+      void loadSales();
       return;
     }
-    if (search.trim().length < 2) {
-      setError("Унесите најмање 2 знака за претрагу.");
+    if (query.length < 2) {
+      setError("Унесите бар 2 карактера за претрагу.");
       return;
     }
-    setError("");
     setLoading(true);
+    setError("");
     try {
-      const data = await saleAPI.searchSales(token, search.trim());
-      setSales(data);
+      const result = await saleAPI.searchSales(token, query);
+      setSales(result);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Грешка при претрази продаја.");
+      const msg =
+        err?.response?.data?.message || "Неуспешна претрага рачуна.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
+  const saleBadge = (type: SaleType) => {
+    if (type === SaleType.MALOPRODAJA) {
+      return { label: "Малопродаја", className: "sale-badge malo" };
+    }
+    if (type === SaleType.VELEPRODAJA) {
+      return { label: "Велепродаја", className: "sale-badge vele" };
+    }
+    return { label: type, className: "sale-badge" };
+  };
+
+  const paymentLabel = (payment: PaymentMethod) => {
+    switch (payment) {
+      case PaymentMethod.GOTOVINA:
+        return "Готовина";
+      case PaymentMethod.UPLATA_NA_RACUN:
+        return "Уплата на рачун";
+      case PaymentMethod.KARTICA:
+        return "Картична уплата";
+      default:
+        return payment;
+    }
+  };
+
   return (
-    <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 style={{ margin: 0 }}>Фискални рачуни</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед и претрага рачуна.</p>
-        </div>
+    <div className="card sales-card">
+      <div>
+        <h3 className="section-title">Фискални рачуни</h3>
+        <p className="text-muted">Преглед и претрага рачуна.</p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="sales-toolbar">
+        <label className="sr-only" htmlFor="sale-search">
+          Претрага рачуна
+        </label>
         <input
-          type="text"
+          id="sale-search"
+          className="auth-input sales-search-input"
           placeholder="Претрага рачуна..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          style={{ flex: 1 }}
         />
-        <button className="btn btn-ghost" onClick={handleSearch}>
+        <button
+          className="btn btn-standard"
+          onClick={handleSearch}
+          disabled={loading}
+        >
           Претражи
         </button>
-        <button className="btn btn-ghost" onClick={loadSales}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => void loadSales()}
+          disabled={loading}
+        >
           Освежи
         </button>
       </div>
 
       {error && (
-        <div className="card" style={{ padding: "10px 12px", background: "rgba(196,43,28,0.12)", borderColor: "var(--win11-close-hover)" }}>
-          <div className="flex items-center gap-2">
-            <span style={{ fontSize: 13 }}>{error}</span>
-          </div>
+        <div className="alert alert-error" role="alert">
+          {error}
         </div>
       )}
 
-      <div className="card" style={{ padding: 0, overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ overflow: "auto", flex: 1, minHeight: 0 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
             <thead>
-              <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px" }}>Број рачуна</th>
-                <th style={{ padding: "10px 12px" }}>Тип продаје</th>
-                <th style={{ padding: "10px 12px" }}>Начин плаћања</th>
-                <th style={{ padding: "10px 12px" }}>Износ (RSD)</th>
-                <th style={{ padding: "10px 12px" }}>Датум</th>
+              <tr>
+                <th>Број рачуна</th>
+                <th>Тип продаје</th>
+                <th>Начин плаћања</th>
+                <th className="text-right">Износ (RSD)</th>
+                <th>Датум</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>
+                  <td colSpan={5} className="text-center">
                     Учитавање...
                   </td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>
-                    Нема фискалних рачуна.
+                  <td colSpan={5} className="text-center">
+                    Нема резултата за приказ.
                   </td>
                 </tr>
               ) : (
                 sales.map((s) => {
-                  const b = badge(s.saleType);
+                  const badge = saleBadge(s.saleType);
                   return (
-                    <tr key={s.id} style={{ borderTop: "1px solid var(--win11-divider)" }}>
-                      <td style={{ padding: "10px 12px", fontWeight: 600 }}>
-                        {s.receiptNumber}
-                        <div style={{ color: "var(--win11-text-secondary)", fontSize: "12px" }}>ID: {s.id}</div>
+                    <tr key={s.id}>
+                      <td>
+                        <div>{s.receiptNumber}</div>
+                        <div className="text-muted">ID: {s.id}</div>
                       </td>
-                      <td style={{ padding: "10px 12px" }}>
-                        <span className="badge" style={{ padding: "4px 8px", borderRadius: 8, background: b.color }}>
-                          {b.label}
-                        </span>
+                      <td>
+                        <span className={badge.className}>{badge.label}</span>
                       </td>
-                      <td style={{ padding: "10px 12px" }}>{paymentLabel(s.paymentMethod)}</td>
-                      <td style={{ padding: "10px 12px" }}>{Number(s.totalAmount || 0).toFixed(2)}</td>
-                      <td style={{ padding: "10px 12px" }}>{new Date(s.createdAt).toLocaleDateString()}</td>
+                      <td>{paymentLabel(s.paymentMethod)}</td>
+                      <td className="text-right">
+                        {Number(s.totalAmount ?? 0).toFixed(2)}
+                      </td>
+                      <td>
+                        {s.createdAt
+                          ? new Date(s.createdAt).toLocaleDateString()
+                          : "-"}
+                      </td>
                     </tr>
                   );
                 })
@@ -169,8 +185,10 @@ export const SaleList: React.FC<Props> = ({ saleAPI }) => {
           </table>
         </div>
       </div>
-      <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
-        Укупно рачуна: {sales.length}
+
+      <div className="table-footer-between text-muted">
+        <span>Укупно рачуна: {sales.length}</span>
+        <span />
       </div>
     </div>
   );

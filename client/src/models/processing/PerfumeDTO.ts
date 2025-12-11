@@ -8,6 +8,7 @@ export interface PerfumeDTO {
   serialNumber: string;
   expirationDate: string;
   plantId: number;
+  status?: string;
   createdAt?: string;
   updatedAt?: string;
 }

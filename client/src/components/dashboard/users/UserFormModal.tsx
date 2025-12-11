@@ -143,6 +143,7 @@ export const UserFormModal: React.FC<Props> = ({ isOpen, mode, initial, onClose,
           lastName: form.lastName.trim(),
           email: form.email.trim(),
           role: form.role,
+          // prazno polje u izmeni briše avatar (šalje null), inače prosleđujemo URL
           profileImage: normalizedProfile === "" ? null : normalizedProfile,
         };
         if (form.password) {

@@ -1,256 +1,3642 @@
 import React, { useEffect, useMemo, useState } from "react";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { IUserAPI } from "../../../api/users/IUserAPI";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { UserDTO } from "../../../models/users/UserDTO";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useAuth } from "../../../hooks/useAuthHook";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { UserFormModal } from "./UserFormModal";
-import { CreateUserDTO } from "../../../models/users/CreateUserDTO";
-import { UpdateUserDTO } from "../../../models/users/UpdateUserDTO";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { UserRole } from "../../../enums/UserRole";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import "./UserManagement.css";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 type Props = {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   userAPI: IUserAPI;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const UserManagement: React.FC<Props> = ({ userAPI }) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const { token } = useAuth();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const [users, setUsers] = useState<UserDTO[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selected, setSelected] = useState<UserDTO | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const [loading, setLoading] = useState(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const [error, setError] = useState<string | null>(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const [search, setSearch] = useState("");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const [editUser, setEditUser] = useState<UserDTO | null>(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const hasToken = useMemo(() => !!token, [token]);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (hasToken) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       void loadUsers();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }, [hasToken]);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const loadUsers = async () => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (!token) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     setLoading(true);
-    setError("");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setError(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     try {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const data = await userAPI.getAllUsers(token);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       setUsers(data);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Неуспешно учитавање корисника.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setError(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        err?.response?.data?.message || "Неуспешно учитавање корисника."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } finally {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       setLoading(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleSearch = async () => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (!token) return;
-    if (!search.trim()) {
-      void loadUsers();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const trimmed = search.trim();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (!trimmed) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      await loadUsers();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
-    if (search.trim().length < 2) {
-      setError("Унесите најмање 2 знака за претрагу.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (trimmed.length < 2) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setError("Unesite najmanje 2 znaka za pretragu.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
-    setError("");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     setLoading(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setError(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     try {
-      const data = await userAPI.searchUsers(token, search.trim());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      const data = await userAPI.searchUsers(token, trimmed);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       setUsers(data);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Грешка при претрази корисника.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setError(err?.response?.data?.message || "Greska pri pretrazi korisnika.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } finally {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       setLoading(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleCreate = () => {
-    setModalMode("create");
-    setSelected(null);
-    setIsModalOpen(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setEditUser(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setModalOpen(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
 
-  const handleEdit = (user: UserDTO) => {
-    setModalMode("edit");
-    setSelected(user);
-    setIsModalOpen(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleEdit = (u: UserDTO) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setEditUser(u);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setModalOpen(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
 
-  const handleDelete = async (user: UserDTO) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleDelete = async (id: number) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (!token) return;
-    const confirmDelete = window.confirm(`Обрисати корисника ${user.username}?`);
-    if (!confirmDelete) return;
-    setBusyId(user.id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const confirmed = window.confirm("Обриши корисника?");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (!confirmed) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setLoading(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setError(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     try {
-      await userAPI.deleteUser(token, user.id);
-      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      await userAPI.deleteUser(token, id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      await loadUsers();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Грешка при брисању корисника.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setError(err?.response?.data?.message || "Брисање није успело.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } finally {
-      setBusyId(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setLoading(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
 
-  const handleSubmit = async (payload: CreateUserDTO | UpdateUserDTO) => {
-    if (!token) throw new Error("Недостаје токен.");
-    if (modalMode === "create") {
-      const created = await userAPI.createUser(token, payload as CreateUserDTO);
-      setUsers((prev) => [created, ...prev]);
-    } else if (selected) {
-      const updated = await userAPI.updateUser(token, selected.id, payload as UpdateUserDTO);
-      setUsers((prev) => prev.map((u) => (u.id === selected.id ? updated : u)));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleSubmit = async (payload: any) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (!token) return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setLoading(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setError(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    try {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      if (editUser) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        await userAPI.updateUser(token, editUser.id, payload);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      } else {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        await userAPI.createUser(token, payload);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setModalOpen(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setEditUser(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      await loadUsers();
+
+
+
+
+
+
+
+      window.dispatchEvent(new CustomEvent("user-updated"));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    } catch (err: any) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setError(err?.response?.data?.message || "Чување није успело.");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    } finally {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      setLoading(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
 
-  const avatarFor = (user: UserDTO): string | undefined => {
-    if (!user.profileImage) return undefined;
-    if (user.profileImage.startsWith("data:")) return user.profileImage;
-    return `data:image/png;base64,${user.profileImage}`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const roleBadge = (role: string) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const normalized = role.toUpperCase();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (normalized === UserRole.ADMIN) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      return <span className="role-badge role-admin">Админ</span>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (normalized === UserRole.SALES_MANAGER) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      return <span className="role-badge role-manager">Менаџер продаје</span>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return <span className="role-badge role-seller">Продавац</span>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   };
 
-  const badgeForRole = (role: string) => {
-    const r = role?.toUpperCase();
-    if (r === "ADMIN") return { label: "Админ", bg: "#d32f2f33" };
-    if (r === "SALES_MANAGER") return { label: "Менаџер продаје", bg: "#1976d233" };
-    if (r === "SELLER") return { label: "Продавац", bg: "#388e3c33" };
-    return { label: role, bg: "var(--win11-subtle)" };
-  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   return (
-    <div className="card" style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
-      <div className="flex items-center justify-between gap-3">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <section className="card user-card">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <header className="user-toolbar">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <div>
-          <h3 style={{ margin: 0 }}>Корисници</h3>
-          <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Преглед, претрага и управљање налозима.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <h3 className="section-title">Корисници</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <p className="text-muted">Преглед, претрага и управљање налозима.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </div>
-        <button className="btn btn-accent" onClick={handleCreate}>+ Нови корисник</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <button className="btn btn-accent" onClick={handleCreate}>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          + Нови корисник
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </header>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      {error && <div className="alert alert-error">{error}</div>}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <div className="user-toolbar">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div className="form-group">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <label className="sr-only" htmlFor="user-search">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Претрага корисника
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          </label>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <input
+
+
+
+
+
+
+
+            id="user-search"
+
+
+
+
+
+
+
+            className="auth-input"
+
+
+
+
+
+
+
+            placeholder="Претрага корисника"
+
+
+
+
+
+
+
+            value={search}
+
+
+
+
+
+
+
+            onChange={(e) => {
+
+
+
+
+
+
+
+              setSearch(e.target.value);
+
+
+
+
+
+
+
+              setError(null);
+
+
+
+
+
+
+
+            }}
+
+
+
+
+
+
+
+            onKeyDown={(e) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              if (e.key === "Enter") {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                e.preventDefault();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                void handleSearch();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div className="toolbar-actions">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <button
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            className="btn btn-ghost"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            type="button"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            onClick={() => void handleSearch()}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Претражи
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          </button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <button
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            className="btn btn-ghost"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            type="button"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            onClick={() => void loadUsers()}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Освежи
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          </button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="text"
-          placeholder="Претрага (име, имејл, корисничко име)..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          style={{ flex: 1 }}
-        />
-        <button className="btn btn-ghost" onClick={handleSearch}>Претражи</button>
-        <button className="btn btn-ghost" onClick={loadUsers}>Освежи</button>
-      </div>
 
-      {error && (
-        <div className="card" style={{ padding: "10px 12px", background: "rgba(196,43,28,0.12)", borderColor: "var(--win11-close-hover)" }}>
-          <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--win11-close-hover)">
-              <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm0 2a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3A.5.5 0 018 5zm0 6a.75.75 0 110 1.5.75.75 0 010-1.5z" />
-            </svg>
-            <span style={{ fontSize: "13px" }}>{error}</span>
-          </div>
-        </div>
-      )}
 
-      <div className="card" style={{ padding: 0, overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ overflow: "auto", flex: 1 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <div className="table-card">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div className="table-scroll">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <table className="data-table">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             <thead>
-              <tr style={{ background: "var(--win11-subtle)", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px" }}>Корисник</th>
-                <th style={{ padding: "10px 12px" }}>Име и презиме</th>
-                <th style={{ padding: "10px 12px" }}>Имејл</th>
-                <th style={{ padding: "10px 12px" }}>Улога</th>
-                <th style={{ padding: "10px 12px", width: "160px" }}>Акције</th>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <th>Корисник</th>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <th>Име и презиме</th>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <th>Имејл</th>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <th>Улога</th>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <th className="text-right">Акције</th>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               </tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             </thead>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             <tbody>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               {loading ? (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Учитавање...</td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <td colSpan={5} className="text-center">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    Учитавање...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  </td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 </tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               ) : users.length === 0 ? (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 <tr>
-                  <td colSpan={5} style={{ padding: "14px", textAlign: "center" }}>Нема корисника за приказ.</td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  <td colSpan={5} className="text-center">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    Нема корисника.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  </td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 </tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               ) : (
-                users.map((user) => (
-                  <tr key={user.id} style={{ borderTop: "1px solid var(--win11-divider)" }}>
-                    <td style={{ padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <Avatar src={avatarFor(user)} fallback={user.username.slice(0, 2).toUpperCase()} />
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{user.username}</div>
-                        <div style={{ color: "var(--win11-text-secondary)", fontSize: "12px" }}>ID: {user.id}</div>
-                      </div>
-                    </td>
-                    <td style={{ padding: "10px 12px" }}>{user.firstName} {user.lastName}</td>
-                    <td style={{ padding: "10px 12px" }}>{user.email}</td>
-                    <td style={{ padding: "10px 12px" }}>
-                      {(() => {
-                        const badge = badgeForRole(user.role);
-                        return (
-                          <span
-                            className="badge"
-                            style={{
-                              padding: "4px 8px",
-                              borderRadius: "8px",
-                              background: badge.bg,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {badge.label}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td style={{ padding: "10px 12px" }}>
-                      <div className="flex items-center gap-2">
-                        <button className="btn btn-ghost" onClick={() => handleEdit(user)} disabled={busyId === user.id}>Измени</button>
-                        <button className="btn btn-ghost" onClick={() => handleDelete(user)} disabled={busyId === user.id}>
-                          {busyId === user.id ? "Брисање..." : "Обриши"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                users.map((u) => {
+                  const rawAvatar = u.profileImage?.trim();
+                  const avatarSrc =
+                    rawAvatar && (rawAvatar.startsWith("http://") || rawAvatar.startsWith("https://") || rawAvatar.startsWith("data:"))
+                      ? rawAvatar
+                      : rawAvatar
+                      ? `data:image/png;base64,${rawAvatar}`
+                      : null;
+
+                  return (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="user-cell">
+                          {avatarSrc ? (
+                            <img src={avatarSrc} alt={u.username} className="avatar-img small" />
+                          ) : (
+                            <div className="avatar small">
+                              {u.username?.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="user-cell-text">
+                            <div className="strong">{u.username}</div>
+                            <div className="text-muted">ID: {u.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{`${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "-"}</td>
+                      <td>{u.email}</td>
+                      <td>{roleBadge(u.role)}</td>
+                      <td className="text-right">
+                        <div className="table-actions">
+                          <button className="btn btn-ghost-sm" type="button" onClick={() => handleEdit(u)}>
+                            Измени
+                          </button>
+                          <button className="btn btn-ghost-sm danger" type="button" onClick={() => handleDelete(u.id)}>
+                            Обриши
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             </tbody>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       </div>
 
-      <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>
-        Укупно корисника: {users.length}
-      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <footer className="table-footer">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <span className="text-muted">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          Укупно корисника: {users.length}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       <UserFormModal
-        isOpen={isModalOpen}
-        mode={modalMode}
-        initial={selected}
-        onClose={() => setIsModalOpen(false)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        isOpen={modalOpen}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        mode={editUser ? "edit" : "create"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        initial={editUser}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        onClose={() => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          setModalOpen(false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          setEditUser(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         onSubmit={handleSubmit}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       />
-    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
-const Avatar: React.FC<{ src?: string; fallback: string }> = ({ src, fallback }) => {
-  return (
-    <div
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: "50%",
-        background: "var(--win11-subtle)",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        color: "var(--win11-text-secondary)",
-        fontWeight: 700,
-        fontSize: "12px",
-      }}
-    >
-      {src ? <img src={src} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : fallback}
-    </div>
-  );
-};
+
+
+
+
+
+
+
+
+
+
+
+
+

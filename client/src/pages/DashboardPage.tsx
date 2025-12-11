@@ -39,15 +39,23 @@ const tabs: { id: MainTab; label: string }[] = [
 ];
 
 const PendingCard: React.FC<{ title: string }> = ({ title }) => (
-  <div className="card" style={{ padding: 16, textAlign: "center" }}>
-    <h3 style={{ margin: "0 0 8px 0" }}>{title}</h3>
-    <p style={{ margin: 0, color: "var(--win11-text-secondary)" }}>Овај сервис треба да се уради.</p>
+  <div className="card dash-card">
+    <h3 className="dash-card__title">{title}</h3>
+    <p className="dash-card__text">Функционалност је у припреми.</p>
   </div>
 );
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI, saleAPI, processingAPI }) => {
+export const DashboardPage: React.FC<DashboardPageProps> = ({
+  userAPI,
+  plantAPI,
+  saleAPI,
+  processingAPI,
+}) => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<MainTab>("pocetna");
+
+  const activePanelId = `dash-panel-${activeTab}`;
+  const activeTabId = `dash-tab-${activeTab}`;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -56,7 +64,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI,
       case "proizvodnja":
         return <ProductionPanel plantAPI={plantAPI} />;
       case "prerada":
-        return <ProcessingPanel processingAPI={processingAPI} plantAPI={plantAPI} />;
+        return (
+          <ProcessingPanel processingAPI={processingAPI} plantAPI={plantAPI} />
+        );
       case "skladistenje":
         return <PendingCard title="Складиштење" />;
       case "prodaja":
@@ -68,7 +78,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI,
       case "pocetna":
       default:
         return (
-          <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 16 }}>
+          <div className="dash-grid">
             <PlantManagement plantAPI={plantAPI} />
             <SaleList saleAPI={saleAPI} />
           </div>
@@ -77,50 +87,63 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ userAPI, plantAPI,
   };
 
   return (
-    <div className="page-wrapper" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-      <header
-        className="card"
-        style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "50%",
-              background: "var(--win11-accent)",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-            }}
-          >
+    <div className="page-wrapper dash-page">
+      <header className="card dash-header">
+        <div className="dash-user">
+          <div className="dash-avatar">
             {user?.username ? user.username[0].toUpperCase() : "?"}
           </div>
-          <div style={{ lineHeight: 1.3 }}>
-            <div style={{ fontWeight: 700 }}>{user?.username ?? "Корисник"}</div>
-            <div style={{ color: "var(--win11-text-secondary)", fontSize: 12 }}>{user?.role?.toUpperCase() ?? ""}</div>
+          <div className="dash-user__info">
+            <div className="dash-user__name">{user?.username ?? "Корисник"}</div>
+            <div className="dash-user__role">
+              {user?.role?.toUpperCase() ?? ""}
+            </div>
           </div>
         </div>
-        <button className="btn btn-ghost" onClick={() => logout()}>
+        <button
+          className="btn btn-ghost"
+          type="button"
+          onClick={() => logout()}
+        >
           Одјава
         </button>
       </header>
 
-      <nav className="card" style={{ padding: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            className={`btn ${activeTab === t.id ? "btn-accent" : "btn-ghost"}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
+      <nav
+        className="card dash-nav"
+        role="tablist"
+        aria-label="Главне секције контролне табле"
+      >
+        {tabs.map((t) => {
+          const id = `dash-tab-${t.id}`;
+          const panelId = `dash-panel-${t.id}`;
+          const isActive = activeTab === t.id;
+
+          return (
+            <button
+              key={t.id}
+              id={id}
+              role="tab"
+              aria-current={isActive ? "page" : undefined}
+              tabIndex={isActive ? 0 : -1}
+              aria-controls={panelId}
+              className={`btn ${isActive ? "btn-accent" : "btn-ghost"}`}
+              type="button"
+              onClick={() => setActiveTab(t.id)}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </nav>
 
-      <main>{renderContent()}</main>
+      <main
+        id={activePanelId}
+        role="tabpanel"
+        aria-labelledby={activeTabId}
+      >
+        {renderContent()}
+      </main>
     </div>
   );
 };

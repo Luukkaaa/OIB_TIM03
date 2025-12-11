@@ -1,0 +1,70 @@
+/* Root navbar container */
+.navbar-top {
+  height: 48px;
+  padding: 0 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Right side content */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Avatar image */
+.navbar-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--win11-border);
+}
+
+/* Fallback avatar (initials) */
+.navbar-avatar-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--win11-subtle);
+  color: var(--win11-text-primary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--win11-border);
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* User info */
+.navbar-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.navbar-email {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.navbar-role {
+  font-size: 12px;
+  color: var(--win11-text-secondary);
+}
+
+/* Logout button */
+.navbar-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navbar-spinner {
+  width: 18px;
+  height: 18px;
+}

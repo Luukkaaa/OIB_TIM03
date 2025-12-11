@@ -1,0 +1,124 @@
+.plantmgmt-root {
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plantmgmt-title {
+  margin: 0;
+}
+
+.plantmgmt-subtitle {
+  margin: 0;
+  color: var(--win11-text-secondary);
+}
+
+/* SEARCH */
+
+.plantmgmt-search-row {
+  align-items: center;
+}
+
+.plantmgmt-search-label {
+  font-size: 13px;
+  color: var(--win11-text-secondary);
+}
+
+.plantmgmt-search-input {
+  flex: 1;
+}
+
+/* ERROR */
+
+.plantmgmt-error-card {
+  padding: 10px 12px;
+  background: rgba(196, 43, 28, 0.12);
+  border-color: var(--win11-close-hover);
+}
+
+.plantmgmt-error-text {
+  font-size: 13px;
+}
+
+/* TABLE */
+
+.plantmgmt-table-card {
+  padding: 0;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.plantmgmt-table-scroll {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.plantmgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.plantmgmt-table-header-row {
+  background: var(--win11-subtle);
+  text-align: left;
+}
+
+.plantmgmt-table-header-cell {
+  padding: 10px 12px;
+}
+
+.plantmgmt-table-row {
+  border-top: 1px solid var(--win11-divider);
+}
+
+.plantmgmt-table-cell {
+  padding: 10px 12px;
+}
+
+.plantmgmt-table-cell.center {
+  text-align: center;
+}
+
+.plantmgmt-plant-name {
+  font-weight: 600;
+}
+
+.plantmgmt-plant-id {
+  color: var(--win11-text-secondary);
+  font-size: 12px;
+}
+
+/* BADGE */
+
+.plantmgmt-badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.plant-badge-planted {
+  background: #90caf933;
+}
+
+.plant-badge-harvested {
+  background: #f7d44a33;
+}
+
+.plant-badge-processed {
+  background: #4caf5033;
+}
+
+.plant-badge-default {
+  background: var(--win11-subtle);
+}
+
+/* FOOTER */
+
+.plantmgmt-footer {
+  color: var(--win11-text-secondary);
+  font-size: 12px;
+}

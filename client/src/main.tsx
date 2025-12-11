@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <AuthProvider authAPI={authApi}>
         <TitleBar />
-        <div style={{ paddingTop: 0 }}>
+        <div className="app-wrapper">
           <App />
         </div>
       </AuthProvider>

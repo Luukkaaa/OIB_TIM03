@@ -1,0 +1,31 @@
+.login-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login-error-card {
+  padding: 12px 16px;
+  background-color: rgba(196, 43, 28, 0.15);
+  border-color: var(--win11-close-hover);
+}
+
+.login-error-icon {
+  flex-shrink: 0;
+}
+
+.login-error-text {
+  font-size: 13px;
+  color: var(--win11-text-primary);
+}
+
+.login-submit {
+  margin-top: 8px;
+}
+
+.login-spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
