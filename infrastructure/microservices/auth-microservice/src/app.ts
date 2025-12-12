@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { Repository } from 'typeorm';
 import { User } from './Domain/models/User';
 import { Db } from './Database/DbConnectionPool';
+import { seedInitialUsers } from './Database/SeedUsers';
 import { IAuthService } from './Domain/services/IAuthService';
 import { AuthService } from './Services/AuthService';
 import { AuthController } from './WebAPI/controllers/AuthController';
@@ -34,8 +35,6 @@ app.use(cors({
 
 app.use(express.json());
 
-initialize_database();
-
 // Dozvoljava pristup samo gateway-u (API key)
 app.use(requireServiceKey);
 
@@ -46,6 +45,14 @@ const userRepository: Repository<User> = Db.getRepository(User);
 const auditLogClient = new AuditLogClient();
 const authService: IAuthService = new AuthService(userRepository, auditLogClient);
 const logerService: ILogerService = new LogerService();
+
+initialize_database()
+  .then(async () => {
+    await seedInitialUsers(userRepository);
+  })
+  .catch((err) => {
+    console.error("\x1b[31m[DbSeed@users]\x1b[0m Seeding failed", err);
+  });
 
 // WebAPI routes
 const authController = new AuthController(authService, logerService, auditLogClient);

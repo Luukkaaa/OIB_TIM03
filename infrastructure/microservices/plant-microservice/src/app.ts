@@ -9,6 +9,7 @@ import { Plant } from "./Domain/models/Plant";
 import { IPlantService } from "./Domain/services/IPlantService";
 import { PlantService } from "./Services/PlantService";
 import { PlantController } from "./WebAPI/controllers/PlantController";
+import { ReportController } from "./WebAPI/controllers/ReportController";
 import { AuditLogClient } from "./Services/AuditLogClient";
 import { requireServiceKey } from "./WebAPI/middlewares/ServiceAuthMiddleware";
 import { authenticate } from "./WebAPI/middlewares/AuthMiddleware";
@@ -47,8 +48,10 @@ const plantService: IPlantService = new PlantService(plantRepository, auditLogCl
 
 // Controllers
 const plantController = new PlantController(plantService, auditLogClient);
+const reportController = new ReportController(plantService, auditLogClient);
 
 // Routes (JWT guard for roles)
 app.use("/api/v1", authenticate, plantController.getRouter());
+app.use("/api/v1", authenticate, reportController.getRouter());
 
 export default app;

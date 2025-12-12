@@ -21,12 +21,22 @@ import { CreateWarehouseDTO } from "../Domain/DTOs/CreateWarehouseDTO";
 import { UpdateWarehouseDTO } from "../Domain/DTOs/UpdateWarehouseDTO";
 import { CreateSaleDTO } from "../Domain/DTOs/CreateSaleDTO";
 import { UpdateSaleDTO } from "../Domain/DTOs/UpdateSaleDTO";
+import { AuditLogClient } from "../Services/AuditLogClient";
+import { LogType } from "../Domain/enums/LogType";
+import { SalesSummaryDTO } from "../Domain/DTOs/SalesSummaryDTO";
+import { PlantSummaryDTO } from "../Domain/DTOs/PlantSummaryDTO";
+import { PerfumeSummaryDTO } from "../Domain/DTOs/PerfumeSummaryDTO";
+import { UserSummaryDTO } from "../Domain/DTOs/UserSummaryDTO";
+import { ReportDTO } from "../Domain/DTOs/ReportDTO";
+import { ReportType } from "../Domain/enums/ReportType";
 
 export class GatewayController {
   private readonly router: Router;
+  private readonly auditClient: AuditLogClient;
 
   constructor(private readonly gatewayService: IGatewayService) {
     this.router = Router();
+    this.auditClient = new AuditLogClient();
     this.initializeRoutes();
   }
 
@@ -51,6 +61,60 @@ export class GatewayController {
     this.router.post("/logs", authenticate, authorize("admin"), this.createLog.bind(this));
     this.router.put("/logs/:id", authenticate, authorize("admin"), this.updateLog.bind(this));
     this.router.delete("/logs/:id", authenticate, authorize("admin"), this.deleteLog.bind(this));
+    // Reports - sales summary
+    this.router.get(
+      "/reports/sales/summary",
+      authenticate,
+      authorize("admin", "sales_manager"),
+      this.getSalesSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/sales/summary/export",
+      authenticate,
+      authorize("admin", "sales_manager"),
+      this.exportSalesSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/plants/summary",
+      authenticate,
+      authorize("admin", "sales_manager"),
+      this.getPlantSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/plants/summary/export",
+      authenticate,
+      authorize("admin", "sales_manager"),
+      this.exportPlantSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/perfumes/summary",
+      authenticate,
+      authorize("admin", "sales_manager"),
+      this.getPerfumeSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/perfumes/summary/export",
+      authenticate,
+      authorize("admin", "sales_manager"),
+      this.exportPerfumeSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/users/summary",
+      authenticate,
+      authorize("admin"),
+      this.getUserSummary.bind(this)
+    );
+    this.router.get(
+      "/reports/users/summary/export",
+      authenticate,
+      authorize("admin"),
+      this.exportUserSummary.bind(this)
+    );
+    // Report templates (persistent, generated in report-microservice)
+    this.router.post("/reports", authenticate, authorize("admin"), this.createReport.bind(this));
+    this.router.get("/reports", authenticate, authorize("admin"), this.listReports.bind(this));
+    this.router.post("/reports/:id/run", authenticate, authorize("admin"), this.runReport.bind(this));
+    this.router.get("/reports/:id/download", authenticate, authorize("admin"), this.downloadReport.bind(this));
 
     // Plants: read svi (uključujući seller), write admin + sales_manager; proizvodnja specifične operacije
     this.router.get("/plants", authenticate, authorize("admin", "sales_manager", "seller"), this.getAllPlants.bind(this));
@@ -97,25 +161,238 @@ export class GatewayController {
     this.router.delete("/sales/:id", authenticate, authorize("admin", "sales_manager", "seller"), this.deleteSale.bind(this));
   }
 
+  // Reports - sales
+  private async getSalesSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const params = {
+        from: req.query.from as string | undefined,
+        to: req.query.to as string | undefined,
+        paymentMethod: req.query.paymentMethod as string | undefined,
+        saleType: req.query.saleType as string | undefined,
+      };
+      const summary: SalesSummaryDTO = await this.gatewayService.getSalesSummary(token, params);
+      res.status(200).json(summary);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getPlantSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const params = {
+        from: req.query.from as string | undefined,
+        to: req.query.to as string | undefined,
+        state: req.query.state as string | undefined,
+      };
+      const summary: PlantSummaryDTO = await this.gatewayService.getPlantSummary(token, params);
+      res.status(200).json(summary);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async exportPlantSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const params = {
+        from: req.query.from as string | undefined,
+        to: req.query.to as string | undefined,
+        state: req.query.state as string | undefined,
+        format: (req.query.format as string | undefined) ?? "csv",
+      };
+      const file = await this.gatewayService.exportPlantSummary(token, params);
+      res.setHeader("Content-Type", file.contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      res.status(200).send(file.data);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getPerfumeSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const params = {
+        from: req.query.from as string | undefined,
+        to: req.query.to as string | undefined,
+        type: req.query.type as string | undefined,
+      };
+      const summary: PerfumeSummaryDTO = await this.gatewayService.getPerfumeSummary(token, params);
+      res.status(200).json(summary);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async exportPerfumeSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const params = {
+        from: req.query.from as string | undefined,
+        to: req.query.to as string | undefined,
+        type: req.query.type as string | undefined,
+        format: (req.query.format as string | undefined) ?? "csv",
+      };
+      const file = await this.gatewayService.exportPerfumeSummary(token, params);
+      res.setHeader("Content-Type", file.contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      res.status(200).send(file.data);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async getUserSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const summary: UserSummaryDTO = await this.gatewayService.getUserSummary(token);
+      res.status(200).json(summary);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async exportUserSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const file = await this.gatewayService.exportUserSummary(token);
+      res.setHeader("Content-Type", file.contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      res.status(200).send(file.data);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  // Report templates (persistent)
+  private async createReport(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const data = req.body as { title: string; type: ReportType; filters?: any };
+      const created: ReportDTO = await this.gatewayService.createReport(token, data);
+      res.status(201).json(created);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async listReports(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const reports: ReportDTO[] = await this.gatewayService.listReports(token);
+      res.status(200).json(reports);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async runReport(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const filters = req.body?.filters ?? {};
+      const report: ReportDTO = await this.gatewayService.runReport(token, id, filters);
+      res.status(200).json(report);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async downloadReport(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const id = parseInt(req.params.id, 10);
+      const file = await this.gatewayService.downloadReport(token, id);
+      res.setHeader("Content-Type", file.contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      res.status(200).send(file.data);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
+  private async exportSalesSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = req.headers.authorization ?? "";
+      const params = {
+        from: req.query.from as string | undefined,
+        to: req.query.to as string | undefined,
+        paymentMethod: req.query.paymentMethod as string | undefined,
+        saleType: req.query.saleType as string | undefined,
+        format: (req.query.format as string | undefined) ?? "csv",
+      };
+      const file = await this.gatewayService.exportSalesSummary(token, params);
+      res.setHeader("Content-Type", file.contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      res.status(200).send(file.data);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 400;
+      const message = err?.response?.data?.message ?? (err as Error).message;
+      res.status(status).json({ message });
+    }
+  }
+
   // Auth
   private async login(req: Request, res: Response): Promise<void> {
     const data: LoginUserDTO = req.body;
     const result = await this.gatewayService.login(data);
-    res.status(200).json(result);
+
+    if (result.success) {
+      void this.auditClient.log(LogType.INFO, `Login uspesan: ${data.username}`);
+      res.status(200).json(result);
+      return;
+    }
+
+    void this.auditClient.log(LogType.WARNING, `Login neuspesan za korisnika ${data.username}`);
+    res.status(401).json(result);
   }
 
   private async register(req: Request, res: Response): Promise<void> {
     const data: RegistrationUserDTO = req.body;
     const result = await this.gatewayService.register(data);
-    res.status(200).json(result);
+
+    if (result.success) {
+      void this.auditClient.log(LogType.INFO, `Registracija uspesna: ${data.username} (${data.role})`);
+      res.status(201).json(result);
+      return;
+    }
+
+    void this.auditClient.log(LogType.WARNING, `Registracija neuspesna za ${data.username}`);
+    res.status(400).json(result);
   }
 
   private async logout(req: Request, res: Response): Promise<void> {
     try {
       const token = req.headers.authorization ?? "";
       const result = await this.gatewayService.logout(token);
+      void this.auditClient.log(LogType.INFO, "Logout poziv preko gateway-a");
       res.status(200).json(result);
     } catch (err) {
+      void this.auditClient.log(LogType.ERROR, "Logout neuspesan (gateway)");
       res.status(400).json({ message: (err as Error).message });
     }
   }

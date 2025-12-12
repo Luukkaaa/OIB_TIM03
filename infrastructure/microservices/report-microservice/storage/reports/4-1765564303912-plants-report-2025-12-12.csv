@@ -1,0 +1,9 @@
+metric,value
+totalSpecies,0
+totalQuantity,0
+averageOilStrength,0.00
+
+byState,count,quantity
+PLANTED,0,0
+HARVESTED,0,0
+PROCESSED,0,0

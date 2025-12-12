@@ -6,6 +6,7 @@ import { UpdatePlantDTO } from "../Domain/DTOs/UpdatePlantDTO";
 import { PlantState } from "../Domain/enums/PlantState";
 import { AuditLogClient } from "./AuditLogClient";
 import { LogType } from "./LogType";
+import { PlantSummaryDTO, PlantSummaryFilter } from "../Domain/DTOs/PlantSummaryDTO";
 
 export class PlantService implements IPlantService {
   constructor(private readonly repo: Repository<Plant>, private readonly audit: AuditLogClient) {}
@@ -178,6 +179,61 @@ export class PlantService implements IPlantService {
     return [saved];
   }
 
+  async getSummary(filter: PlantSummaryFilter): Promise<PlantSummaryDTO> {
+    const qb = this.repo.createQueryBuilder("plant");
+    if (filter.from) qb.andWhere("plant.createdAt >= :from", { from: filter.from });
+    if (filter.to) qb.andWhere("plant.createdAt <= :to", { to: filter.to });
+    if (filter.state) qb.andWhere("plant.state = :state", { state: filter.state });
+
+    const items = await qb.getMany();
+    const totalSpecies = items.length;
+    const totalQuantity = items.reduce((sum, p) => sum + (p.quantity ?? 0), 0);
+    const averageOilStrength = items.length
+      ? items.reduce((sum, p) => sum + Number(p.oilStrength), 0) / items.length
+      : 0;
+
+    const byState = Object.values(PlantState).map((st) => {
+      const arr = items.filter((p) => p.state === st);
+      const count = arr.length;
+      const quantity = arr.reduce((sum, p) => sum + (p.quantity ?? 0), 0);
+      return { state: st, count, quantity };
+    });
+
+    await this.audit.log(
+      LogType.INFO,
+      `Generisan rezime biljaka (${totalSpecies} vrsta, kolicina ${totalQuantity})`
+    );
+
+    return {
+      from: filter.from?.toISOString(),
+      to: filter.to?.toISOString(),
+      totalSpecies,
+      totalQuantity,
+      averageOilStrength,
+      byState,
+    };
+  }
+
+  async exportSummaryCSV(filter: PlantSummaryFilter): Promise<{ filename: string; contentType: string; content: string }> {
+    const summary = await this.getSummary(filter);
+    const fromPart = summary.from ? summary.from.slice(0, 10) : "all";
+    const toPart = summary.to ? summary.to.slice(0, 10) : "now";
+    const filename = `plant-summary-${fromPart}-to-${toPart}.csv`;
+
+    const lines: string[] = [];
+    lines.push("metric,value");
+    lines.push(`totalSpecies,${summary.totalSpecies}`);
+    lines.push(`totalQuantity,${summary.totalQuantity}`);
+    lines.push(`averageOilStrength,${summary.averageOilStrength.toFixed(2)}`);
+    lines.push("");
+    lines.push("byState,count,quantity");
+    summary.byState.forEach((row) => {
+      lines.push(`${row.state},${row.count},${row.quantity}`);
+    });
+
+    return { filename, contentType: "text/csv", content: lines.join("\n") };
+  }
+
   private validateStrength(val: number) {
     if (val === undefined || val === null || Number.isNaN(val) || val < 1 || val > 5) {
       throw new Error("Oil strength must be between 1.0 and 5.0");
@@ -195,7 +251,6 @@ export class PlantService implements IPlantService {
     return Number(raw.toFixed(1));
   }
 }
-
 
 
 

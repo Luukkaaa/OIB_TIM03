@@ -12,6 +12,7 @@ import { authenticate } from "./WebAPI/middlewares/AuthMiddleware";
 import { IPerfumeService } from "./Domain/services/IPerfumeService";
 import { PerfumeService } from "./Services/PerfumeService";
 import { PerfumeController } from "./WebAPI/controllers/PerfumeController";
+import { ReportController } from "./WebAPI/controllers/ReportController";
 import { ProductionClient } from "./Services/ProductionClient";
 
 dotenv.config({ quiet: true });
@@ -49,8 +50,10 @@ const perfumeService: IPerfumeService = new PerfumeService(perfumeRepository, au
 
 // Controllers
 const perfumeController = new PerfumeController(perfumeService, auditLogClient);
+const reportController = new ReportController(perfumeService, auditLogClient);
 
 // Routes (JWT guard for roles)
 app.use("/api/v1", authenticate, perfumeController.getRouter());
+app.use("/api/v1", authenticate, reportController.getRouter());
 
 export default app;

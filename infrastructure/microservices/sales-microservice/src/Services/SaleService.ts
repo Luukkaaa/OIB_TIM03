@@ -7,6 +7,7 @@ import { AuditLogClient } from "./AuditLogClient";
 import { LogType } from "./LogType";
 import { SaleType } from "../Domain/enums/SaleType";
 import { PaymentMethod } from "../Domain/enums/PaymentMethod";
+import { SalesReportFilter, SalesSummaryDTO } from "../Domain/DTOs/SalesSummaryDTO";
 
 export class SaleService implements ISaleService {
   constructor(private readonly repo: Repository<Sale>, private readonly audit: AuditLogClient) {}
@@ -91,6 +92,75 @@ export class SaleService implements ISaleService {
     });
     await this.audit.log(LogType.INFO, `Pretraga prodaja '${q}' -> ${items.length} rezultata`);
     return items;
+  }
+
+  async getSummary(filter: SalesReportFilter): Promise<SalesSummaryDTO> {
+    const qb = this.repo.createQueryBuilder("sale");
+    if (filter.from) qb.andWhere("sale.createdAt >= :from", { from: filter.from });
+    if (filter.to) qb.andWhere("sale.createdAt <= :to", { to: filter.to });
+    if (filter.paymentMethod) qb.andWhere("sale.paymentMethod = :pm", { pm: filter.paymentMethod });
+    if (filter.saleType) qb.andWhere("sale.saleType = :st", { st: filter.saleType });
+
+    const sales = await qb.orderBy("sale.createdAt", "DESC").getMany();
+    const totalCount = sales.length;
+    const totalAmount = sales.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+    const averageAmount = totalCount ? totalAmount / totalCount : 0;
+
+    const byPaymentMethod = Object.values(PaymentMethod).map((pm) => {
+      const arr = sales.filter((s) => s.paymentMethod === pm);
+      const count = arr.length;
+      const amount = arr.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+      return { paymentMethod: pm, totalAmount: amount, count, averageAmount: count ? amount / count : 0 };
+    });
+
+    const bySaleType = Object.values(SaleType).map((st) => {
+      const arr = sales.filter((s) => s.saleType === st);
+      const count = arr.length;
+      const amount = arr.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+      return { saleType: st, totalAmount: amount, count, averageAmount: count ? amount / count : 0 };
+    });
+
+    await this.audit.log(
+      LogType.INFO,
+      `Generisan rezime prodaja (${totalCount} računa)${filter.from ? ` od ${filter.from.toISOString()}` : ""}${
+        filter.to ? ` do ${filter.to.toISOString()}` : ""
+      }`
+    );
+
+    return {
+      from: filter.from?.toISOString(),
+      to: filter.to?.toISOString(),
+      totalCount,
+      totalAmount,
+      averageAmount,
+      byPaymentMethod,
+      bySaleType,
+    };
+  }
+
+  async exportSummaryCSV(filter: SalesReportFilter): Promise<{ filename: string; contentType: string; content: string }> {
+    const summary = await this.getSummary(filter);
+    const fromPart = summary.from ? summary.from.slice(0, 10) : "all";
+    const toPart = summary.to ? summary.to.slice(0, 10) : "now";
+    const filename = `sales-summary-${fromPart}-to-${toPart}.csv`;
+
+    const lines: string[] = [];
+    lines.push("metric,value");
+    lines.push(`totalCount,${summary.totalCount}`);
+    lines.push(`totalAmount,${summary.totalAmount.toFixed(2)}`);
+    lines.push(`averageAmount,${summary.averageAmount.toFixed(2)}`);
+    lines.push("");
+    lines.push("byPaymentMethod,amount,count,avg");
+    summary.byPaymentMethod.forEach((p) =>
+      lines.push(`${p.paymentMethod},${p.totalAmount.toFixed(2)},${p.count},${p.averageAmount.toFixed(2)}`)
+    );
+    lines.push("");
+    lines.push("bySaleType,amount,count,avg");
+    summary.bySaleType.forEach((p) =>
+      lines.push(`${p.saleType},${p.totalAmount.toFixed(2)},${p.count},${p.averageAmount.toFixed(2)}`)
+    );
+
+    return { filename, contentType: "text/csv", content: lines.join("\n") };
   }
 
   private calculateTotal(data: { items: { quantity: number; unitPrice: number }[] }): number {

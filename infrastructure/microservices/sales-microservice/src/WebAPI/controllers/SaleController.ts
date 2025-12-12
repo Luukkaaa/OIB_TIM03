@@ -5,6 +5,8 @@ import { CreateSaleDTO } from "../../Domain/DTOs/CreateSaleDTO";
 import { UpdateSaleDTO } from "../../Domain/DTOs/UpdateSaleDTO";
 import { AuditLogClient } from "../../Services/AuditLogClient";
 import { LogType } from "../../Services/LogType";
+import { PaymentMethod } from "../../Domain/enums/PaymentMethod";
+import { SaleType } from "../../Domain/enums/SaleType";
 
 export class SaleController {
   private readonly router: Router;
@@ -21,6 +23,8 @@ export class SaleController {
     this.router.get("/sales/:id", this.getById.bind(this));
     this.router.put("/sales/:id", this.update.bind(this));
     this.router.delete("/sales/:id", this.delete.bind(this));
+    this.router.get("/reports/sales/summary", this.summary.bind(this));
+    this.router.get("/reports/sales/summary/export", this.exportSummary.bind(this));
   }
 
   private async safeAudit(type: LogType, message: string): Promise<void> {
@@ -104,7 +108,62 @@ export class SaleController {
       const items = await this.saleService.search(q);
       res.status(200).json({ success: true, data: items });
     } catch (err) {
-      await this.safeAudit(LogType.ERROR, `Pretraga prodaja neuspesна: ${(err as Error).message}`);
+      await this.safeAudit(LogType.ERROR, `Pretraga prodaja neuspesna: ${(err as Error).message}`);
+      res.status(400).json({ success: false, message: (err as Error).message });
+    }
+  }
+
+  private parseFilters(req: Request) {
+    const fromRaw = req.query.from as string | undefined;
+    const toRaw = req.query.to as string | undefined;
+    const paymentMethod = (req.query.paymentMethod as string | undefined)?.toUpperCase();
+    const saleType = (req.query.saleType as string | undefined)?.toUpperCase();
+
+    const from = fromRaw ? new Date(fromRaw) : undefined;
+    const to = toRaw ? new Date(toRaw) : undefined;
+    if (from && isNaN(from.getTime())) throw new Error("Neispravan datum 'from'");
+    if (to && isNaN(to.getTime())) throw new Error("Neispravan datum 'to'");
+
+    if (paymentMethod && !Object.values(PaymentMethod).includes(paymentMethod as PaymentMethod)) {
+      throw new Error("Nepoznat paymentMethod");
+    }
+    if (saleType && !Object.values(SaleType).includes(saleType as SaleType)) {
+      throw new Error("Nepoznat saleType");
+    }
+
+    return {
+      from,
+      to,
+      paymentMethod: paymentMethod as PaymentMethod | undefined,
+      saleType: saleType as SaleType | undefined,
+    };
+  }
+
+  private async summary(req: Request, res: Response): Promise<void> {
+    try {
+      const filters = this.parseFilters(req);
+      const summary = await this.saleService.getSummary(filters);
+      res.status(200).json({ success: true, data: summary });
+    } catch (err) {
+      await this.safeAudit(LogType.ERROR, `Rezime prodaja neuspesan: ${(err as Error).message}`);
+      res.status(400).json({ success: false, message: (err as Error).message });
+    }
+  }
+
+  private async exportSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const filters = this.parseFilters(req);
+      const format = (req.query.format as string | undefined)?.toLowerCase() || "csv";
+      if (format !== "csv") {
+        res.status(400).json({ success: false, message: "Podrzan je samo CSV export" });
+        return;
+      }
+      const exportData = await this.saleService.exportSummaryCSV(filters);
+      res.setHeader("Content-Type", exportData.contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${exportData.filename}"`);
+      res.status(200).send(exportData.content);
+    } catch (err) {
+      await this.safeAudit(LogType.ERROR, `Export rezimea prodaja neuspesan: ${(err as Error).message}`);
       res.status(400).json({ success: false, message: (err as Error).message });
     }
   }

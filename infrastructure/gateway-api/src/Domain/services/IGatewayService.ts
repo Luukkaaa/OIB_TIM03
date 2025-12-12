@@ -25,6 +25,12 @@ import { UpdateWarehouseDTO } from "../DTOs/UpdateWarehouseDTO";
 import { SaleDTO } from "../DTOs/SaleDTO";
 import { CreateSaleDTO } from "../DTOs/CreateSaleDTO";
 import { UpdateSaleDTO } from "../DTOs/UpdateSaleDTO";
+import { SalesSummaryDTO } from "../DTOs/SalesSummaryDTO";
+import { PlantSummaryDTO } from "../DTOs/PlantSummaryDTO";
+import { PerfumeSummaryDTO } from "../DTOs/PerfumeSummaryDTO";
+import { UserSummaryDTO } from "../DTOs/UserSummaryDTO";
+import { ReportDTO } from "../DTOs/ReportDTO";
+import { ReportType } from "../enums/ReportType";
 
 export interface IGatewayService {
   // Auth
@@ -102,5 +108,34 @@ export interface IGatewayService {
   createSale(token: string, data: CreateSaleDTO): Promise<SaleDTO>;
   updateSale(token: string, id: number, data: UpdateSaleDTO): Promise<SaleDTO>;
   deleteSale(token: string, id: number): Promise<void>;
+  getSalesSummary(
+    token: string,
+    params: { from?: string; to?: string; paymentMethod?: string; saleType?: string }
+  ): Promise<SalesSummaryDTO>;
+  exportSalesSummary(
+    token: string,
+    params: { from?: string; to?: string; paymentMethod?: string; saleType?: string; format?: string }
+  ): Promise<{ data: Buffer; contentType: string; filename: string }>;
+  getPlantSummary(
+    token: string,
+    params: { from?: string; to?: string; state?: string }
+  ): Promise<PlantSummaryDTO>;
+  exportPlantSummary(
+    token: string,
+    params: { from?: string; to?: string; state?: string; format?: string }
+  ): Promise<{ data: Buffer; contentType: string; filename: string }>;
+  getPerfumeSummary(
+    token: string,
+    params: { from?: string; to?: string; type?: string }
+  ): Promise<PerfumeSummaryDTO>;
+  exportPerfumeSummary(
+    token: string,
+    params: { from?: string; to?: string; type?: string; format?: string }
+  ): Promise<{ data: Buffer; contentType: string; filename: string }>;
+  getUserSummary(token: string): Promise<UserSummaryDTO>;
+  exportUserSummary(token: string): Promise<{ data: Buffer; contentType: string; filename: string }>;
+  createReport(token: string, data: { title: string; type: ReportType; filters?: any }): Promise<ReportDTO>;
+  listReports(token: string): Promise<ReportDTO[]>;
+  runReport(token: string, id: number, filters?: any): Promise<ReportDTO>;
+  downloadReport(token: string, id: number): Promise<{ data: Buffer; contentType: string; filename: string }>;
 }
-

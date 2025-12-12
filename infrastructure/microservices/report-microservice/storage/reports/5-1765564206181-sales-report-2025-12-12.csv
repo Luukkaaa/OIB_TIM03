@@ -1,0 +1,13 @@
+metric,value
+totalCount,8
+totalAmount,512490.00
+averageAmount,64061.25
+
+byPaymentMethod,amount,count,avg
+GOTOVINA,11240.00,2,5620.00
+UPLATA_NA_RACUN,388400.00,3,129466.67
+KARTICA,112850.00,3,37616.67
+
+bySaleType,amount,count,avg
+MALOPRODAJA,37690.00,4,9422.50
+VELEPRODAJA,474800.00,4,118700.00

@@ -27,11 +27,18 @@ import { UpdateWarehouseDTO } from "../Domain/DTOs/UpdateWarehouseDTO";
 import { SaleDTO } from "../Domain/DTOs/SaleDTO";
 import { CreateSaleDTO } from "../Domain/DTOs/CreateSaleDTO";
 import { UpdateSaleDTO } from "../Domain/DTOs/UpdateSaleDTO";
+import { SalesSummaryDTO } from "../Domain/DTOs/SalesSummaryDTO";
+import { PlantSummaryDTO } from "../Domain/DTOs/PlantSummaryDTO";
+import { PerfumeSummaryDTO } from "../Domain/DTOs/PerfumeSummaryDTO";
+import { UserSummaryDTO } from "../Domain/DTOs/UserSummaryDTO";
+import { ReportDTO } from "../Domain/DTOs/ReportDTO";
+import { ReportType } from "../Domain/enums/ReportType";
 
 export class GatewayService implements IGatewayService {
   private readonly authClient: AxiosInstance;
   private readonly userClient: AxiosInstance;
   private readonly auditClient: AxiosInstance;
+  private readonly reportClient: AxiosInstance;
   private readonly plantClient: AxiosInstance;
   private readonly processingClient: AxiosInstance;
   private readonly packagingClient: AxiosInstance;
@@ -47,6 +54,7 @@ export class GatewayService implements IGatewayService {
     const packagingBaseURL = process.env.PACKAGING_SERVICE_API || "http://localhost:6400/api/v1";
     const storageBaseURL = process.env.STORAGE_SERVICE_API || "http://localhost:6500/api/v1";
     const salesBaseURL = process.env.SALES_SERVICE_API || "http://localhost:6600/api/v1";
+    const reportBaseURL = process.env.REPORT_SERVICE_API || "http://localhost:6700/api/v1";
     const serviceKey = process.env.SERVICE_API_KEY ?? "dev-gateway-key";
 
     this.authClient = axios.create({
@@ -63,6 +71,11 @@ export class GatewayService implements IGatewayService {
 
     this.auditClient = axios.create({
       baseURL: auditBaseURL,
+      headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
+      timeout: 5000,
+    });
+    this.reportClient = axios.create({
+      baseURL: reportBaseURL,
       headers: { "Content-Type": "application/json", "x-service-key": serviceKey },
       timeout: 5000,
     });
@@ -103,8 +116,9 @@ export class GatewayService implements IGatewayService {
     try {
       const response = await this.authClient.post<AuthResponseType>("/auth/login", data);
       return response.data;
-    } catch {
-      return { authenificated: false };
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? "Login failed";
+      return { success: false, message };
     }
   }
 
@@ -112,8 +126,9 @@ export class GatewayService implements IGatewayService {
     try {
       const response = await this.authClient.post<AuthResponseType>("/auth/register", data);
       return response.data;
-    } catch {
-      return { authenificated: false };
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? "Registration failed";
+      return { success: false, message };
     }
   }
 
@@ -445,5 +460,137 @@ export class GatewayService implements IGatewayService {
     await this.salesClient.delete(`/sales/${id}`, {
       headers: { Authorization: token },
     });
+  }
+
+  async getSalesSummary(
+    token: string,
+    params: { from?: string; to?: string; paymentMethod?: string; saleType?: string }
+  ): Promise<SalesSummaryDTO> {
+    const response = await this.salesClient.get<{ success: boolean; data: SalesSummaryDTO }>(
+      "/reports/sales/summary",
+      {
+        params,
+        headers: { Authorization: token },
+      }
+    );
+    return response.data.data;
+  }
+
+  async exportSalesSummary(
+    token: string,
+    params: { from?: string; to?: string; paymentMethod?: string; saleType?: string; format?: string }
+  ): Promise<{ data: Buffer; contentType: string; filename: string }> {
+    const response = await this.salesClient.get<ArrayBuffer>("/reports/sales/summary/export", {
+      params,
+      responseType: "arraybuffer",
+      headers: { Authorization: token },
+    });
+    const contentType = response.headers["content-type"] ?? "text/csv";
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const filenameMatch = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = filenameMatch?.[1] ?? "sales-summary.csv";
+    return { data: Buffer.from(response.data), contentType, filename };
+  }
+
+  async getPlantSummary(token: string, params: { from?: string; to?: string; state?: string }): Promise<PlantSummaryDTO> {
+    const response = await this.plantClient.get<{ success: boolean; data: PlantSummaryDTO }>(
+      "/reports/plants/summary",
+      { params, headers: { Authorization: token } }
+    );
+    return response.data.data;
+  }
+
+  async exportPlantSummary(
+    token: string,
+    params: { from?: string; to?: string; state?: string; format?: string }
+  ): Promise<{ data: Buffer; contentType: string; filename: string }> {
+    const response = await this.plantClient.get<ArrayBuffer>("/reports/plants/summary/export", {
+      params,
+      responseType: "arraybuffer",
+      headers: { Authorization: token },
+    });
+    const contentType = response.headers["content-type"] ?? "text/csv";
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const filenameMatch = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = filenameMatch?.[1] ?? "plant-summary.csv";
+    return { data: Buffer.from(response.data), contentType, filename };
+  }
+
+  async getPerfumeSummary(token: string, params: { from?: string; to?: string; type?: string }): Promise<PerfumeSummaryDTO> {
+    const response = await this.processingClient.get<{ success: boolean; data: PerfumeSummaryDTO }>(
+      "/reports/perfumes/summary",
+      { params, headers: { Authorization: token } }
+    );
+    return response.data.data;
+  }
+
+  async exportPerfumeSummary(
+    token: string,
+    params: { from?: string; to?: string; type?: string; format?: string }
+  ): Promise<{ data: Buffer; contentType: string; filename: string }> {
+    const response = await this.processingClient.get<ArrayBuffer>("/reports/perfumes/summary/export", {
+      params,
+      responseType: "arraybuffer",
+      headers: { Authorization: token },
+    });
+    const contentType = response.headers["content-type"] ?? "text/csv";
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const filenameMatch = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = filenameMatch?.[1] ?? "perfume-summary.csv";
+    return { data: Buffer.from(response.data), contentType, filename };
+  }
+
+  async getUserSummary(token: string): Promise<UserSummaryDTO> {
+    const response = await this.userClient.get<{ success: boolean; data: UserSummaryDTO }>("/reports/users/summary", {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async exportUserSummary(token: string): Promise<{ data: Buffer; contentType: string; filename: string }> {
+    const response = await this.userClient.get<ArrayBuffer>("/reports/users/summary/export", {
+      responseType: "arraybuffer",
+      headers: { Authorization: token },
+    });
+    const contentType = response.headers["content-type"] ?? "text/csv";
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const filenameMatch = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = filenameMatch?.[1] ?? "users-summary.csv";
+    return { data: Buffer.from(response.data), contentType, filename };
+  }
+
+  async createReport(token: string, data: { title: string; type: ReportType; filters?: any }): Promise<ReportDTO> {
+    const response = await this.reportClient.post<{ success: boolean; data: ReportDTO }>("/reports", data, {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async listReports(token: string): Promise<ReportDTO[]> {
+    const response = await this.reportClient.get<{ success: boolean; data: ReportDTO[] }>("/reports", {
+      headers: { Authorization: token },
+    });
+    return response.data.data;
+  }
+
+  async runReport(token: string, id: number, filters?: any): Promise<ReportDTO> {
+    const response = await this.reportClient.post<{ success: boolean; data: ReportDTO }>(
+      `/reports/${id}/run`,
+      { filters },
+      { headers: { Authorization: token } }
+    );
+    return response.data.data;
+  }
+
+  async downloadReport(token: string, id: number): Promise<{ data: Buffer; contentType: string; filename: string }> {
+    const response = await this.reportClient.get<ArrayBuffer>(`/reports/${id}/download`, {
+      responseType: "arraybuffer",
+      headers: { Authorization: token },
+    });
+    const contentType = response.headers["content-type"] ?? "text/csv";
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const filenameMatch = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = filenameMatch?.[1] ?? "report.csv";
+    return { data: Buffer.from(response.data), contentType, filename };
   }
 }

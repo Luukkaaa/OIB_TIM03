@@ -9,4 +9,5 @@ export interface IUsersService {
   updateUser(id: number, data: UpdateUserDTO): Promise<UserDTO>;
   deleteUser(id: number): Promise<void>;
   searchUsers(query: string): Promise<UserDTO[]>;
+  getSummary(): Promise<UserSummaryDTO>;
 }

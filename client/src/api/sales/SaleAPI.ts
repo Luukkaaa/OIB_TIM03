@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { ISaleAPI } from "./ISaleAPI";
 import { SaleDTO } from "../../models/sales/SaleDTO";
+import { SalesSummary } from "../../models/reports/SalesSummary";
 
 export class SaleAPI implements ISaleAPI {
   private readonly axiosInstance: AxiosInstance;
@@ -29,5 +30,35 @@ export class SaleAPI implements ISaleAPI {
       { headers: this.getAuthHeaders(token) }
     );
     return (response.data as any).data ?? (response.data as SaleDTO[]);
+  }
+
+  async getSalesSummary(
+    token: string,
+    params: { from?: string; to?: string; paymentMethod?: string; saleType?: string }
+  ): Promise<SalesSummary> {
+    const response: AxiosResponse<{ data?: SalesSummary } | SalesSummary> = await this.axiosInstance.get(
+      "/reports/sales/summary",
+      {
+        params,
+        headers: this.getAuthHeaders(token),
+      }
+    );
+    return (response.data as any).data ?? (response.data as SalesSummary);
+  }
+
+  async exportSalesSummary(
+    token: string,
+    params: { from?: string; to?: string; paymentMethod?: string; saleType?: string; format?: string }
+  ): Promise<{ blob: Blob; filename: string; contentType: string }> {
+    const response = await this.axiosInstance.get("/reports/sales/summary/export", {
+      params,
+      responseType: "blob",
+      headers: this.getAuthHeaders(token),
+    });
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const match = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = match?.[1] ?? "sales-summary.csv";
+    const contentType = (response.headers["content-type"] as string | undefined) ?? "text/csv";
+    return { blob: response.data, filename, contentType };
   }
 }

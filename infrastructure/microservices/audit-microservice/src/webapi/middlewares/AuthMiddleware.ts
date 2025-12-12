@@ -2,6 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
+  // Dozvoli servisne pozive ako je x-service-key korektan
+  const expectedKey = process.env.SERVICE_API_KEY || "dev-gateway-key";
+  const providedKey = req.header("x-service-key");
+  if (providedKey && providedKey === expectedKey) {
+    next();
+    return;
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

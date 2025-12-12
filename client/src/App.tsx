@@ -10,6 +10,8 @@ import { ISaleAPI } from "./api/sales/ISaleAPI";
 import { SaleAPI } from "./api/sales/SaleAPI";
 import { IProcessingAPI } from "./api/processing/IProcessingAPI";
 import { ProcessingAPI } from "./api/processing/ProcessingAPI";
+import { IReportAPI } from "./api/reports/IReportAPI";
+import { ReportAPI } from "./api/reports/ReportAPI";
 import { ProtectedRoute } from "./components/protected_route/ProtectedRoute";
 import { DashboardPage } from "./pages/DashboardPage";
 
@@ -18,6 +20,7 @@ const user_api: IUserAPI = new UserAPI();
 const plant_api: IPlantAPI = new PlantAPI();
 const sale_api: ISaleAPI = new SaleAPI();
 const processing_api: IProcessingAPI = new ProcessingAPI();
+const report_api: IReportAPI = new ReportAPI();
 
 function App() {
   return (
@@ -28,7 +31,13 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute requiredRole="admin,seller,sales_manager">
-              <DashboardPage userAPI={user_api} plantAPI={plant_api} saleAPI={sale_api} processingAPI={processing_api} />
+              <DashboardPage
+                userAPI={user_api}
+                plantAPI={plant_api}
+                saleAPI={sale_api}
+                processingAPI={processing_api}
+                reportAPI={report_api}
+              />
             </ProtectedRoute>
           }
         />

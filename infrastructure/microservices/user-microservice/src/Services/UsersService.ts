@@ -7,6 +7,8 @@ import { UpdateUserDTO } from "../Domain/DTOs/UpdateUserDTO";
 import bcrypt from "bcryptjs";
 import { AuditLogClient } from "./AuditLogClient";
 import { LogType } from "../audit-types/LogType";
+import { UserSummaryDTO } from "../Domain/DTOs/UserSummaryDTO";
+import { UserRole } from "../Domain/enums/UserRole";
 
 export class UsersService implements IUsersService {
   private readonly saltRounds: number = parseInt(process.env.SALT_ROUNDS || "10", 10);
@@ -156,5 +158,16 @@ export class UsersService implements IUsersService {
       role: user.role,
       profileImage: user.profileImage ?? "",
     };
+  }
+
+  async getSummary(): Promise<UserSummaryDTO> {
+    const users = await this.userRepository.find();
+    const totalCount = users.length;
+    const byRole = Object.values(UserRole).map((r) => ({
+      role: r,
+      count: users.filter((u) => u.role === r).length,
+    }));
+    await this.auditClient.log(LogType.INFO, `Generisan rezime korisnika (${totalCount})`);
+    return { totalCount, byRole };
   }
 }

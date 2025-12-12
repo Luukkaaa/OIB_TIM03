@@ -3,6 +3,7 @@ import { PlantDTO } from "../../models/plants/PlantDTO";
 import { IPlantAPI } from "./IPlantAPI";
 import { CreatePlantDTO } from "../../models/plants/CreatePlantDTO";
 import { UpdatePlantDTO } from "../../models/plants/UpdatePlantDTO";
+import { PlantSummary } from "../../models/reports/PlantSummary";
 
 export class PlantAPI implements IPlantAPI {
   private readonly axiosInstance: AxiosInstance;
@@ -83,6 +84,32 @@ export class PlantAPI implements IPlantAPI {
     });
     return (response.data as any).data ?? (response.data as PlantDTO[]);
   }
-}
 
+  async getPlantSummary(
+    token: string,
+    params: { from?: string; to?: string; state?: string }
+  ): Promise<PlantSummary> {
+    const response: AxiosResponse<{ success?: boolean; data: PlantSummary } | PlantSummary> = await this.axiosInstance.get(
+      "/reports/plants/summary",
+      { params, headers: this.getAuthHeaders(token) }
+    );
+    return (response.data as any).data ?? (response.data as PlantSummary);
+  }
+
+  async exportPlantSummary(
+    token: string,
+    params: { from?: string; to?: string; state?: string; format?: string }
+  ): Promise<{ blob: Blob; filename: string; contentType: string }> {
+    const response = await this.axiosInstance.get("/reports/plants/summary/export", {
+      params,
+      responseType: "blob",
+      headers: this.getAuthHeaders(token),
+    });
+    const disposition = response.headers["content-disposition"] as string | undefined;
+    const match = disposition?.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = match?.[1] ?? "plant-summary.csv";
+    const contentType = (response.headers["content-type"] as string | undefined) ?? "text/csv";
+    return { blob: response.data, filename, contentType };
+  }
+}
 

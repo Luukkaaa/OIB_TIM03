@@ -1,6 +1,7 @@
 import { CreatePlantDTO } from "../../models/plants/CreatePlantDTO";
 import { PlantDTO } from "../../models/plants/PlantDTO";
 import { UpdatePlantDTO } from "../../models/plants/UpdatePlantDTO";
+import { PlantSummary } from "../../models/reports/PlantSummary";
 
 export interface IPlantAPI {
   getAllPlants(token: string): Promise<PlantDTO[]>;
@@ -12,4 +13,9 @@ export interface IPlantAPI {
   seedPlant(token: string, data: { commonName: string; latinName: string; originCountry: string; oilStrength?: number; quantity?: number }): Promise<PlantDTO>;
   adjustStrength(token: string, data: { plantId: number; targetPercent: number }): Promise<PlantDTO>;
   harvestPlants(token: string, data: { commonName: string; count: number }): Promise<PlantDTO[]>;
+  getPlantSummary(token: string, params: { from?: string; to?: string; state?: string }): Promise<PlantSummary>;
+  exportPlantSummary(
+    token: string,
+    params: { from?: string; to?: string; state?: string; format?: string }
+  ): Promise<{ blob: Blob; filename: string; contentType: string }>;
 }

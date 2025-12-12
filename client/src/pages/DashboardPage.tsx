@@ -9,6 +9,12 @@ import { SaleList } from "../components/dashboard/sales/SaleList";
 import { UserManagement } from "../components/dashboard/users/UserManagement";
 import { ProductionPanel } from "../components/dashboard/production/ProductionPanel";
 import { ProcessingPanel } from "../components/dashboard/processing/ProcessingPanel";
+import { SalesReports } from "../components/dashboard/reports/SalesReports";
+import { PlantReports } from "../components/dashboard/reports/PlantReports";
+import { PerfumeReports } from "../components/dashboard/reports/PerfumeReports";
+import { UserReports } from "../components/dashboard/reports/UserReports";
+import { ReportManager } from "../components/dashboard/reports/ReportManager";
+import { IReportAPI } from "../api/reports/IReportAPI";
 
 type MainTab =
   | "pocetna"
@@ -18,30 +24,33 @@ type MainTab =
   | "prodaja"
   | "korisnici"
   | "analizaprodaje"
-  | "analizaperformansi";
+  | "analizaperformansi"
+  | "izvestaji";
 
 type DashboardPageProps = {
   userAPI: IUserAPI;
   plantAPI: IPlantAPI;
   saleAPI: ISaleAPI;
   processingAPI: IProcessingAPI;
+  reportAPI: IReportAPI;
 };
 
 const tabs: { id: MainTab; label: string }[] = [
-  { id: "pocetna", label: "Почетна" },
-  { id: "proizvodnja", label: "Производња" },
-  { id: "prerada", label: "Прерада" },
-  { id: "skladistenje", label: "Складиштење" },
-  { id: "prodaja", label: "Продаја" },
-  { id: "korisnici", label: "Корисници" },
-  { id: "analizaprodaje", label: "Анализа продаје" },
-  { id: "analizaperformansi", label: "Анализа перформанси" },
+  { id: "pocetna", label: "Početna" },
+  { id: "proizvodnja", label: "Proizvodnja" },
+  { id: "prerada", label: "Prerada" },
+  { id: "skladistenje", label: "Skladištenje" },
+  { id: "prodaja", label: "Prodaja" },
+  { id: "korisnici", label: "Korisnici" },
+  { id: "analizaprodaje", label: "Analiza prodaje" },
+  { id: "analizaperformansi", label: "Analiza performansi" },
+  { id: "izvestaji", label: "Izveštaji" },
 ];
 
 const PendingCard: React.FC<{ title: string }> = ({ title }) => (
   <div className="card dash-card">
     <h3 className="dash-card__title">{title}</h3>
-    <p className="dash-card__text">Функционалност је у припреми.</p>
+    <p className="dash-card__text">Ova sekcija još nije implementirana.</p>
   </div>
 );
 
@@ -50,6 +59,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   plantAPI,
   saleAPI,
   processingAPI,
+  reportAPI,
 }) => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<MainTab>("pocetna");
@@ -64,17 +74,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       case "proizvodnja":
         return <ProductionPanel plantAPI={plantAPI} />;
       case "prerada":
-        return (
-          <ProcessingPanel processingAPI={processingAPI} plantAPI={plantAPI} />
-        );
+        return <ProcessingPanel processingAPI={processingAPI} plantAPI={plantAPI} />;
       case "skladistenje":
-        return <PendingCard title="Складиштење" />;
+        return <PendingCard title="Skladištenje" />;
       case "prodaja":
-        return <PendingCard title="Продаја" />;
+        return <PendingCard title="Prodaja" />;
       case "analizaprodaje":
-        return <PendingCard title="Анализа продаје" />;
+        return <PendingCard title="Analiza prodaje" />;
       case "analizaperformansi":
-        return <PendingCard title="Анализа перформанси" />;
+        return <PendingCard title="Analiza performansi" />;
+      case "izvestaji":
+        return (
+          <div className="dash-grid">
+            <SalesReports saleAPI={saleAPI} />
+            <PlantReports plantAPI={plantAPI} />
+            <PerfumeReports processingAPI={processingAPI} />
+            <UserReports userAPI={userAPI} />
+            {/* Menadžer trajnih izveštaja */}
+            <div className="dash-grid-full">
+              <ReportManager reportAPI={reportAPI} />
+            </div>
+          </div>
+        );
       case "pocetna":
       default:
         return (
@@ -90,30 +111,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="page-wrapper dash-page">
       <header className="card dash-header">
         <div className="dash-user">
-          <div className="dash-avatar">
-            {user?.username ? user.username[0].toUpperCase() : "?"}
-          </div>
+          <div className="dash-avatar">{user?.username ? user.username[0].toUpperCase() : "?"}</div>
           <div className="dash-user__info">
-            <div className="dash-user__name">{user?.username ?? "Корисник"}</div>
-            <div className="dash-user__role">
-              {user?.role?.toUpperCase() ?? ""}
-            </div>
+            <div className="dash-user__name">{user?.username ?? "Nepoznat korisnik"}</div>
+            <div className="dash-user__role">{user?.role?.toUpperCase() ?? ""}</div>
           </div>
         </div>
-        <button
-          className="btn btn-ghost"
-          type="button"
-          onClick={() => logout()}
-        >
-          Одјава
+        <button className="btn btn-ghost" type="button" onClick={() => logout()}>
+          Odjava
         </button>
       </header>
 
-      <nav
-        className="card dash-nav"
-        role="tablist"
-        aria-label="Главне секције контролне табле"
-      >
+      <nav className="card dash-nav" role="tablist" aria-label="Navigacija kontrolnih tabova">
         {tabs.map((t) => {
           const id = `dash-tab-${t.id}`;
           const panelId = `dash-panel-${t.id}`;
@@ -137,11 +146,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         })}
       </nav>
 
-      <main
-        id={activePanelId}
-        role="tabpanel"
-        aria-labelledby={activeTabId}
-      >
+      <main id={activePanelId} role="tabpanel" aria-labelledby={activeTabId}>
         {renderContent()}
       </main>
     </div>

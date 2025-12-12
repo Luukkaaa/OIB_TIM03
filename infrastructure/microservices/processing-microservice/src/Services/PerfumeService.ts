@@ -9,6 +9,7 @@ import { LogType } from "./LogType";
 import { PerfumeType } from "../Domain/enums/PerfumeType";
 import { ProductionClient, PlantState } from "./ProductionClient";
 import { ProcessRequestDTO } from "../Domain/DTOs/ProcessRequestDTO";
+import { PerfumeSummaryDTO, PerfumeSummaryFilter } from "../Domain/DTOs/PerfumeSummaryDTO";
 
 export class PerfumeService implements IPerfumeService {
   constructor(
@@ -33,6 +34,52 @@ export class PerfumeService implements IPerfumeService {
     const saved = await this.repo.save(perfume);
     await this.audit.log(LogType.INFO, `Kreiran parfem ${saved.name} (${saved.serialNumber})`);
     return saved;
+  }
+
+  async getSummary(filter: PerfumeSummaryFilter): Promise<PerfumeSummaryDTO> {
+    const qb = this.repo.createQueryBuilder("perfume");
+    if (filter.from) qb.andWhere("perfume.createdAt >= :from", { from: filter.from });
+    if (filter.to) qb.andWhere("perfume.createdAt <= :to", { to: filter.to });
+    if (filter.type) qb.andWhere("perfume.type = :type", { type: filter.type });
+
+    const items = await qb.getMany();
+    const totalCount = items.length;
+    const averageVolume = totalCount ? items.reduce((sum, p) => sum + Number(p.netQuantityMl), 0) / totalCount : 0;
+
+    const byType = Object.values(PerfumeType).map((t) => {
+      const arr = items.filter((p) => p.type === t);
+      const count = arr.length;
+      const avg = count ? arr.reduce((s, p) => s + Number(p.netQuantityMl), 0) / count : 0;
+      return { type: t, count, averageVolume: avg };
+    });
+
+    await this.audit.log(LogType.INFO, `Generisan rezime parfema (${totalCount} zapisa)`);
+    return {
+      from: filter.from?.toISOString(),
+      to: filter.to?.toISOString(),
+      totalCount,
+      averageVolume,
+      byType,
+    };
+  }
+
+  async exportSummaryCSV(filter: PerfumeSummaryFilter): Promise<{ filename: string; contentType: string; content: string }> {
+    const summary = await this.getSummary(filter);
+    const fromPart = summary.from ? summary.from.slice(0, 10) : "all";
+    const toPart = summary.to ? summary.to.slice(0, 10) : "now";
+    const filename = `perfume-summary-${fromPart}-to-${toPart}.csv`;
+
+    const lines: string[] = [];
+    lines.push("metric,value");
+    lines.push(`totalCount,${summary.totalCount}`);
+    lines.push(`averageVolume,${summary.averageVolume.toFixed(2)}`);
+    lines.push("");
+    lines.push("byType,count,avgVolume");
+    summary.byType.forEach((row) => {
+      lines.push(`${row.type},${row.count},${row.averageVolume.toFixed(2)}`);
+    });
+
+    return { filename, contentType: "text/csv", content: lines.join("\n") };
   }
 
   async update(id: number, data: UpdatePerfumeDTO): Promise<Perfume> {

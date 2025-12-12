@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { Repository } from 'typeorm';
 import { User } from './Domain/models/User';
 import { Db } from './Database/DbConnectionPool';
+import { seedInitialUsers } from './Database/SeedUsers';
 import { IUsersService } from './Domain/services/IUsersService';
 import { UsersService } from './Services/UsersService';
 import { UsersController } from './WebAPI/controllers/UsersController';
@@ -13,6 +14,7 @@ import { ILogerService } from './Domain/services/ILogerService';
 import { LogerService } from './Services/LogerService';
 import { AuditLogClient } from './Services/AuditLogClient';
 import { requireServiceKey } from './WebAPI/middlewares/ServiceAuthMiddleware';
+import { ReportController } from './WebAPI/controllers/ReportController';
 
 dotenv.config({ quiet: true });
 
@@ -34,23 +36,34 @@ app.use(cors({
 
 app.use(express.json());
 
-initialize_database();
-
 // Dozvoljava pristup samo gateway-u (API key)
 app.use(requireServiceKey);
 
-// ORM Repositories
-const userRepository: Repository<User> = Db.getRepository(User);
-
-// Services
+// Services (initialized after DB is ready)
 const auditLogClient = new AuditLogClient();
-const userService: IUsersService = new UsersService(userRepository, auditLogClient);
 const logerService: ILogerService = new LogerService();
 
-// WebAPI routes
-const userController = new UsersController(userService, logerService, auditLogClient);
+// Hold references that will be set once the DB is connected
+let userRepository: Repository<User>;
+let userService: IUsersService;
+let userController: UsersController;
+let reportController: ReportController;
 
-// Registering routes
-app.use('/api/v1', userController.getRouter());
+initialize_database()
+  .then(async () => {
+    userRepository = Db.getRepository(User);
+    userService = new UsersService(userRepository, auditLogClient);
+    userController = new UsersController(userService, logerService, auditLogClient);
+    reportController = new ReportController(userService, auditLogClient);
+
+    await seedInitialUsers(userRepository);
+
+    // Register routes only after initialization to avoid using uninitialized repo
+    app.use('/api/v1', userController.getRouter());
+    app.use('/api/v1', reportController.getRouter());
+  })
+  .catch((err) => {
+    console.error("\x1b[31m[DbSeed@users]\x1b[0m Seeding failed", err);
+  });
 
 export default app;
